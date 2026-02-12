@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>프라임K수학 수납체크</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Pretendard Variable', 'Noto Sans KR', -apple-system, sans-serif;
+    background: linear-gradient(180deg, #f0f0f8 0%, #e8e8f0 100%);
+    min-height: 100vh; color: #1a1a2e;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #2d2d50 100%);
+    padding: 20px 20px 24px; color: #fff;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .header-label { font-size: 11px; font-weight: 600; color: #8888aa; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; }
+  .header-date { text-align: right; font-size: 13px; color: #aaaacc; font-weight: 500; }
+  .header-date-main { font-weight: 700; color: #ddddf0; font-size: 14px; }
+
+  /* Stats */
+  .stats { display: flex; gap: 8px; }
+  .stat-card { flex: 1; border-radius: 12px; padding: 12px; text-align: center; background: rgba(255,255,255,0.08); }
+  .stat-card.done { background: rgba(34,197,94,0.12); }
+  .stat-number { font-size: 22px; font-weight: 800; }
+  .stat-number.green { color: #4ade80; }
+  .stat-label { font-size: 11px; color: #8888aa; font-weight: 600; }
+
+  /* Hint */
+  .hint {
+    margin: 16px 16px 8px; padding: 10px 14px;
+    background: #fff; border-radius: 10px;
+    font-size: 12px; color: #666; text-align: center;
+    font-weight: 500; border: 1px dashed #d0d0e0;
+  }
+
+  /* Category */
+  .category { margin-bottom: 16px; }
+  .category-header {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding: 14px 18px; border: none; cursor: pointer;
+    font-family: inherit; transition: all 0.2s ease;
+  }
+  .category-header.expanded { border-radius: 14px 14px 0 0; }
+  .category-header.collapsed { border-radius: 14px; }
+  .category-left { display: flex; align-items: center; gap: 10px; }
+  .category-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 4px 10px; border-radius: 8px; color: #fff;
+    font-size: 13px; font-weight: 800; letter-spacing: -0.02em;
+  }
+  .category-subtitle { font-size: 14px; color: #555; font-weight: 600; }
+  .category-right { display: flex; align-items: center; gap: 8px; }
+  .category-count {
+    background: #fff; border-radius: 20px; padding: 2px 10px;
+    font-size: 13px; font-weight: 700;
+  }
+  .category-arrow {
+    font-size: 16px; color: #999; display: inline-block; transition: transform 0.2s ease;
+  }
+  .category-arrow.open { transform: rotate(180deg); }
+  .category-body { padding: 12px; border-radius: 0 0 14px 14px; border-top: none; }
+  .category-empty {
+    text-align: center; padding: 16px; font-size: 13px; color: #aaa; font-weight: 500;
+  }
+
+  /* Student Card */
+  .student-card {
+    display: flex; align-items: stretch;
+    width: 100%; background: #fff; border: 1.5px solid #e8e8ef;
+    border-radius: 14px; overflow: hidden;
+    transition: all 0.2s ease; margin-bottom: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .student-card:last-child { margin-bottom: 0; }
+  .student-card.copied {
+    background: #f0fdf4; border-color: #86efac;
+    box-shadow: 0 2px 12px rgba(34,197,94,0.15);
+  }
+
+  /* 메인 영역 - 탭하면 복사 */
+  .student-main {
+    flex: 1; display: flex; align-items: center; gap: 14px;
+    padding: 14px 0 14px 16px; cursor: pointer;
+    background: none; border: none; text-align: left; font-family: inherit;
+    transition: background 0.15s; min-width: 0;
+  }
+  .student-main:active { background: rgba(0,0,0,0.02); }
+  .student-avatar {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; flex-shrink: 0; transition: all 0.2s ease;
+  }
+  .student-avatar.copied { background: #22c55e !important; color: #fff !important; }
+  .student-name { font-size: 16px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.02em; margin-bottom: 2px; }
+  .student-info { font-size: 12px; color: #8b8ba0; font-weight: 500; margin-bottom: 1px; }
+  .student-phone { font-size: 11px; color: #b0b0c0; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  /* 액션 버튼들 */
+  .student-actions {
+    display: flex; align-items: center; gap: 0; flex-shrink: 0;
+  }
+  .action-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 12px 14px; border: none; cursor: pointer; font-family: inherit;
+    transition: background 0.15s; background: none; min-width: 56px;
+  }
+  .action-btn:active { background: rgba(0,0,0,0.04); }
+  .action-btn .icon { font-size: 18px; margin-bottom: 2px; }
+  .action-btn .label { font-size: 10px; font-weight: 600; color: #999; }
+  .action-divider { width: 1px; height: 28px; background: #eee; }
+
+  .copy-status {
+    font-size: 10px; font-weight: 700; padding: 3px 8px;
+    border-radius: 6px; margin-right: 10px; flex-shrink: 0;
+  }
+  .copy-status.done { color: #22c55e; background: #f0fdf4; }
+  .copy-status.pending { color: #b0b0c0; background: #f5f5fa; }
+
+  /* Preview Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px); display: flex;
+    align-items: flex-end; justify-content: center;
+    z-index: 900; padding: 20px; animation: fadeIn 0.2s ease;
+  }
+  .modal-content {
+    background: #fff; border-radius: 20px;
+    width: 100%; max-width: 420px; max-height: 75vh;
+    overflow: auto; padding: 24px; animation: slideUp 0.3s ease;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-title { font-size: 18px; font-weight: 800; }
+  .modal-close {
+    background: #f0f0f5; border: none; border-radius: 10px;
+    width: 32px; height: 32px; cursor: pointer; font-size: 16px; color: #888;
+  }
+  .modal-body {
+    background: #f8f8fc; border-radius: 14px; padding: 16px;
+    font-size: 13.5px; line-height: 1.7; color: #333;
+    white-space: pre-wrap; margin-bottom: 16px;
+    max-height: 45vh; overflow-y: auto;
+  }
+  .modal-actions { display: flex; gap: 8px; }
+  .modal-btn {
+    flex: 1; padding: 14px; color: #fff; border: none;
+    border-radius: 12px; font-size: 15px; font-weight: 700;
+    cursor: pointer; font-family: inherit; text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .modal-btn.secondary { background: #e8e8ef; color: #555; }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 60px 20px; color: #aaa; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-text { font-size: 16px; font-weight: 700; }
+
+  /* Loading */
+  .loading { text-align: center; padding: 60px 20px; color: #888; }
+  .loading-spinner {
+    width: 32px; height: 32px; border: 3px solid #e0e0e0;
+    border-top: 3px solid #1a1a2e; border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+  }
+
+  /* Error */
+  .error-box {
+    margin: 16px; padding: 16px; background: #fef2f2;
+    border: 1.5px solid #fecaca; border-radius: 14px; text-align: center;
+  }
+  .error-icon { font-size: 28px; margin-bottom: 8px; }
+  .error-text { font-size: 14px; color: #dc2626; font-weight: 600; margin-bottom: 4px; }
+  .error-sub { font-size: 12px; color: #999; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
+    background: #1a1a2e; color: #fff; padding: 12px 24px;
+    border-radius: 12px; font-size: 14px; font-weight: 600;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 1000; white-space: nowrap; letter-spacing: -0.01em;
+  }
+  .toast.visible { bottom: 32px; }
+
+  .content { padding: 8px 16px 100px; }
+
+  /* Refresh */
+  .refresh-btn {
+    position: fixed; bottom: 24px; right: 24px;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: #1a1a2e; color: #fff; border: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    font-size: 20px; cursor: pointer; z-index: 800;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s ease;
+  }
+  .refresh-btn:active { transform: scale(0.9); }
+
+  @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+// ============================================================
+// 설정
+// ============================================================
+const CONFIG = {
+  dataUrl: './data.json',
+  bustCache: true,
+};
+
+// ============================================================
+// 상태
+// ============================================================
+let state = {
+  data: null,
+  error: null,
+  loading: true,
+  expanded: {},
+  copiedNames: new Set(),
+  previewStudent: null,
+  previewColor: null,
+};
+
+// 전화번호 포맷: 01012345678 → 010-1234-5678
+function formatPhone(phone) {
+  if (!phone) return '';
+  const p = phone.replace(/\D/g, '');
+  if (p.length === 11) return p.slice(0,3) + '-' + p.slice(3,7) + '-' + p.slice(7);
+  if (p.length === 10) return p.slice(0,3) + '-' + p.slice(3,6) + '-' + p.slice(6);
+  return phone;
+}
+
+// 데이터 로드
+async function loadData() {
+  state.loading = true;
+  state.error = null;
+  render();
+  try {
+    const url = CONFIG.bustCache ? `${CONFIG.dataUrl}?t=${Date.now()}` : CONFIG.dataUrl;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    state.data = await res.json();
+    state.loading = false;
+    state.data.categories.forEach(c => { state.expanded[c.id] = true; });
+  } catch (e) {
+    state.error = e.message;
+    state.loading = false;
+  }
+  render();
+}
+
+// 클립보드 복사
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0;left:-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  }
+}
+
+// 토스트
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = '✅ ' + msg;
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 1800);
+}
+
+// 학생 복사
+async function handleCopy(key) {
+  const stu = window.__students[key];
+  if (!stu) return;
+  await copyText(stu.message);
+  state.copiedNames.add(stu.name);
+  showToast(`${stu.name} 문자 복사 완료`);
+  render();
+}
+
+// 문자앱 열기 (복사 후 문자앱으로 이동)
+async function openSMS(key) {
+  const stu = window.__students[key];
+  if (!stu) return;
+  await copyText(stu.message);
+  state.copiedNames.add(stu.name);
+  showToast(`${stu.name} 문자 복사 → 문자앱 이동`);
+  render();
+  // sms: URI로 문자앱 열기
+  setTimeout(() => {
+    window.location.href = `sms:${stu.phone}`;
+  }, 300);
+}
+
+// 미리보기
+function openPreview(key, color) {
+  state.previewStudent = window.__students[key];
+  state.previewColor = color;
+  state._previewKey = key;
+  render();
+}
+function closePreview() {
+  state.previewStudent = null;
+  render();
+}
+
+// 카테고리 토글
+function toggleCategory(id) {
+  state.expanded[id] = !state.expanded[id];
+  render();
+}
+
+// ============================================================
+// 렌더링
+// ============================================================
+function render() {
+  const app = document.getElementById('app');
+  const d = state.data;
+
+  if (state.loading) {
+    app.innerHTML = `
+      <div class="header"><div class="header-top"><div>
+        <div class="header-label">프라임K수학</div>
+        <div class="header-title">수납 체크 📋</div>
+      </div></div></div>
+      <div class="loading"><div class="loading-spinner"></div><div>데이터를 불러오는 중...</div></div>`;
+    return;
+  }
+
+  if (state.error) {
+    app.innerHTML = `
+      <div class="header"><div class="header-top"><div>
+        <div class="header-label">프라임K수학</div>
+        <div class="header-title">수납 체크 📋</div>
+      </div></div></div>
+      <div class="error-box">
+        <div class="error-icon">⚠️</div>
+        <div class="error-text">데이터를 불러올 수 없습니다</div>
+        <div class="error-sub">${state.error}</div>
+        <div class="error-sub" style="margin-top:8px">data.json 파일이 있는지 확인해주세요</div>
+      </div>`;
+    return;
+  }
+
+  const totalStudents = d.categories.reduce((s, c) => s + c.students.length, 0);
+  const copiedCount = state.copiedNames.size;
+
+  // 학생 참조 저장
+  window.__students = {};
+  d.categories.forEach(cat => {
+    cat.students.forEach((stu, idx) => {
+      window.__students[`${cat.id}_${idx}`] = stu;
+    });
+  });
+
+  let categoriesHtml = '';
+  d.categories.forEach(cat => {
+    const isOpen = state.expanded[cat.id];
+    const color = cat.color || '#888';
+    const count = cat.students.length;
+
+    let studentsHtml = '';
+    if (isOpen) {
+      if (count === 0) {
+        studentsHtml = `<div class="category-empty">해당 학생이 없습니다</div>`;
+      } else {
+        cat.students.forEach((stu, idx) => {
+          const key = `${cat.id}_${idx}`;
+          const isCopied = state.copiedNames.has(stu.name);
+
+          studentsHtml += `
+            <div class="student-card ${isCopied ? 'copied' : ''}">
+              <button class="student-main" onclick="handleCopy('${key}')">
+                <div class="student-avatar ${isCopied ? 'copied' : ''}"
+                     style="background:${isCopied ? '#22c55e' : `linear-gradient(135deg, ${color}22, ${color}44)`};
+                            color:${isCopied ? '#fff' : color}">
+                  ${isCopied ? '✓' : stu.name.charAt(0)}
+                </div>
+                <div style="min-width:0">
+                  <div class="student-name">${stu.name}</div>
+                  <div class="student-info">${stu.grade} · ${stu.amount}원</div>
+                  <div class="student-phone">${formatPhone(stu.phone)}</div>
+                </div>
+              </button>
+              <div class="student-actions">
+                <span class="copy-status ${isCopied ? 'done' : 'pending'}">${isCopied ? '복사됨' : ''}</span>
+                <div class="action-divider"></div>
+                <button class="action-btn" onclick="openPreview('${key}','${color}')" title="미리보기">
+                  <span class="icon">👁</span>
+                  <span class="label">미리보기</span>
+                </button>
+                <div class="action-divider"></div>
+                <button class="action-btn" onclick="openSMS('${key}')" title="문자보내기">
+                  <span class="icon">💬</span>
+                  <span class="label">문자</span>
+                </button>
+              </div>
+            </div>`;
+        });
+      }
+    }
+
+    categoriesHtml += `
+      <div class="category">
+        <button class="category-header ${isOpen ? 'expanded' : 'collapsed'}"
+                style="background:linear-gradient(135deg, ${color}10, ${color}08); border:1.5px solid ${color}30;"
+                onclick="toggleCategory('${cat.id}')">
+          <div class="category-left">
+            <span class="category-badge" style="background:${color}">${cat.label}</span>
+            <span class="category-subtitle">${cat.subtitle}</span>
+          </div>
+          <div class="category-right">
+            <span class="category-count" style="border:1.5px solid ${color}40; color:${color}">${count}명</span>
+            <span class="category-arrow ${isOpen ? 'open' : ''}">▾</span>
+          </div>
+        </button>
+        ${isOpen ? `<div class="category-body" style="background:${color}08; border:1.5px solid ${color}20; border-top:none;">${studentsHtml}</div>` : ''}
+      </div>`;
+  });
+
+  if (totalStudents === 0) {
+    categoriesHtml = `
+      <div class="empty">
+        <div class="empty-icon">🎉</div>
+        <div class="empty-text">오늘은 수납 알림 대상이 없습니다</div>
+      </div>`;
+  }
+
+  app.innerHTML = `
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <div class="header-label">맥시멈K컨설팅 & 프라임K수학</div>
+          <div class="header-title">수납 체크 📋</div>
+        </div>
+        <div class="header-date">
+          <div class="header-date-main">${d.date}</div>
+          <div>${d.generated_at} 생성</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-number">${totalStudents}</div>
+          <div class="stat-label">전체</div>
+        </div>
+        <div class="stat-card done">
+          <div class="stat-number green">${copiedCount}</div>
+          <div class="stat-label">발송 완료</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${totalStudents - copiedCount}</div>
+          <div class="stat-label">미발송</div>
+        </div>
+      </div>
+    </div>
+    <div class="hint">👆 학생 이름 탭 → 문자 복사 &nbsp;|&nbsp; 💬 문자 버튼 → 복사 후 문자앱 바로 이동</div>
+    <div class="content">${categoriesHtml}</div>
+    <button class="refresh-btn" onclick="location.reload()" title="새로고침">🔄</button>
+  `;
+
+  // 미리보기 모달
+  if (state.previewStudent) {
+    const stu = state.previewStudent;
+    const col = state.previewColor || '#1a1a2e';
+    const key = state._previewKey;
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.onclick = closePreview;
+    modal.innerHTML = `
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title">${stu.name}</div>
+            <div style="font-size:12px;color:#888;margin-top:2px">${stu.grade} · ${formatPhone(stu.phone)}</div>
+          </div>
+          <button class="modal-close" onclick="closePreview()">✕</button>
+        </div>
+        <div class="modal-body">${stu.message}</div>
+        <div class="modal-actions">
+          <button class="modal-btn" style="background:${col}"
+                  onclick="handleCopy('${key}'); closePreview();">
+            📋 복사하기
+          </button>
+          <button class="modal-btn secondary"
+                  onclick="handleCopy('${key}'); closePreview(); setTimeout(()=>{window.location.href='sms:${stu.phone}'},300);">
+            💬 복사 + 문자
+          </button>
+        </div>
+      </div>`;
+    app.appendChild(modal);
+  }
+}
+
+// 시작
+loadData();
+</script>
+</body>
+</html>
