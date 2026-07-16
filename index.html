@@ -151,6 +151,7 @@ function render(){
   const map = { home:renderHome, roster:renderRoster, pay:renderPay, book:renderBook, exam:renderExam, diff:renderDiff };
   $("view").innerHTML = (map[tab]||renderHome)();
   if(tab==="book") initBook();
+  if(tab==="exam" && $("exMaths") && !$("exMaths").children.length) addMathRow();
   window.scrollTo(0,0);
 }
 function go(t){ tab=t; render(); }
@@ -300,12 +301,14 @@ function computeDdays(){
   const ex = DB.exams; const stu = DB.students; if(!ex||!stu) return [];
   const out = [];
   (ex.exam_periods||[]).forEach(p=>{
-    const mathDate = (p.math&&p.math[0]&&p.math[0].date) ? p.math[0].date : p.start;
-    const d = daysUntil(mathDate);
     const who = (stu.students||[]).filter(s=>s.school===p.school && s.grade===p.grade).map(s=>s.name);
     if(!who.length) return;
-    out.push({ school:p.school, grade:p.grade, label:`${p.semester||""} ${p.type||""}`.trim(), date:mathDate, d, who, kind:"school",
-               subject:(p.math&&p.math[0]?p.math[0].subject:""), scope:(p.math&&p.math[0]?p.math[0].scope:"") });
+    const subs = (p.subjects&&p.subjects.length) ? p.subjects : [{date:p.start, subject:"", scope:""}];
+    subs.forEach(m=>{
+      const dt = m.date || p.start;
+      out.push({ school:p.school, grade:p.grade, label:`${p.semester||""} ${p.type||""}${m.subject?" · "+m.subject:""}`.trim(),
+                 date:dt, d:daysUntil(dt), who, kind:"school", subject:m.subject||"", scope:m.scope||"" });
+    });
   });
   (ex.national||[]).forEach(n=>{
     if(!n.date) return; const d=daysUntil(n.date);
@@ -325,15 +328,98 @@ function renderExam(){
   if(!ex) return errBox("exams.json");
   const dds = computeDdays().filter(x=>x.d==null||x.d>=-3).sort((a,b)=>(a.d==null?9999:a.d)-(b.d==null?9999:b.d));
   let head = `<h2 class="sec"><span class="dot"></span>시험 D-day</h2>`;
-  let ddHtml = dds.length ? dds.map(ddayRow).join("") : `<div class="empty">등록된 시험 일정이 없습니다.<br>아래 입력대상에 시험기간을 등록하세요.</div>`;
-  let tg = `<h2 class="sec"><span class="dot"></span>시험일정 입력 대상 (${(ex.targets||[]).length})</h2><div class="card">`;
-  (ex.targets||[]).forEach(t=>{
+  let ddHtml = dds.length ? dds.map(ddayRow).join("") : `<div class="empty">등록된 시험이 없습니다.<br>아래에서 학교·학년을 골라 등록하세요.</div>`;
+  return head + ddHtml + examForm() + examTargetList();
+}
+function examForm(){
+  const ex = DB.exams;
+  const topts = (ex.targets||[]).map((t,i)=>`<option value="${i}">${esc(t.school)} ${esc(t.grade)}</option>`).join("");
+  return `<h2 class="sec"><span class="dot"></span>시험 등록</h2>
+  <div class="card">
+    <label class="lb">학교 · 학년</label>
+    <select id="exTarget" onchange="examTargetChange()"><option value="">— 선택하세요 —</option>${topts}</select>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <select id="exSem"><option value="1학기">1학기</option><option value="2학기">2학기</option></select>
+      <select id="exType"><option value="중간">중간고사</option><option value="기말">기말고사</option></select>
+    </div>
+    <label class="lb">시험 기간</label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="date" id="exStart"><span style="color:var(--muted)">~</span><input type="date" id="exEnd">
+    </div>
+    <label class="lb">과목별 시험일 <span style="font-weight:400;font-size:11px;color:var(--muted)">(수학 2과목·물리·통합과학·경제 등 ＋추가)</span></label>
+    <div id="exMaths"></div>
+    <button class="add-btn" onclick="addMathRow()">＋ 과목 추가</button>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn btn-outline" onclick="examFormReset()">초기화</button>
+      <button class="btn btn-primary" onclick="saveExam(this)">💾 저장</button>
+    </div>
+    <div class="hint">저장하려면 ⚙에서 토큰이 설정돼 있어야 합니다(수동버튼과 동일 토큰).</div>
+  </div>`;
+}
+function examTargetList(){
+  const ex = DB.exams;
+  let tg = `<h2 class="sec"><span class="dot"></span>학교×학년 (${(ex.targets||[]).length}) · 탭하면 폼에 불러오기</h2><div class="card">`;
+  (ex.targets||[]).forEach((t,i)=>{
     const has = (ex.exam_periods||[]).some(p=>p.school===t.school&&p.grade===t.grade);
-    tg += `<div class="row"><div><div class="nm">${esc(t.school)} ${esc(t.grade)}</div><div class="sub">${esc((t.students||[]).join(", "))}</div></div>
-           <div class="right"><span class="pill ${has?'g':'n'}">${has?'등록됨':'미등록'}</span></div></div>`;
+    tg += `<div class="row" style="cursor:pointer" onclick="examPickTarget(${i})"><div><div class="nm">${esc(t.school)} ${esc(t.grade)}</div><div class="sub">${esc((t.students||[]).join(", "))}</div></div>
+           <div class="right"><span class="pill ${has?'g':'n'}">${has?'등록':'미등록'}</span></div></div>`;
   });
-  tg += `</div><div class="hint" style="margin:2px">시험기간·수학 과목·범위, 수능·모의고사 날짜는 클로드코드에 말씀하시면 exams.json에 입력됩니다.</div>`;
-  return head+ddHtml+tg;
+  return tg + `</div>`;
+}
+function mathRowHTML(subject,date,scope){
+  return `<div class="exrow" style="background:#f8f8fc;border-radius:9px;padding:8px;margin-bottom:8px">
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <input class="exSubj" placeholder="과목(예:수학1·미적분·물리·통합과학·경제)" value="${subject?esc(subject):""}" style="flex:1">
+      <input class="exDate" type="date" value="${date||""}" style="width:148px">
+      <button onclick="this.closest('.exrow').remove()" style="width:34px;border:none;border-radius:8px;background:#f1ece0;color:#a09a8a;font-size:15px;cursor:pointer">✕</button>
+    </div>
+    <input class="exScope" placeholder="시험 범위(선택)" value="${scope?esc(scope):""}">
+  </div>`;
+}
+function addMathRow(subject,date,scope){
+  $("exMaths").insertAdjacentHTML("beforeend", mathRowHTML(subject,date,scope));
+}
+function loadPeriodToForm(t){
+  const p = (DB.exams.exam_periods||[]).find(x=>x.school===t.school&&x.grade===t.grade);
+  $("exMaths").innerHTML="";
+  if(p){
+    $("exSem").value=p.semester||"1학기"; $("exType").value=p.type||"중간";
+    $("exStart").value=p.start||""; $("exEnd").value=p.end||"";
+    (p.subjects||[]).forEach(m=>addMathRow(m.subject,m.date,m.scope));
+  } else {
+    $("exSem").value="1학기"; $("exType").value="중간"; $("exStart").value=""; $("exEnd").value="";
+  }
+  if(!$("exMaths").children.length) addMathRow();
+}
+function examTargetChange(){ const i=$("exTarget").value; if(i==="") return; loadPeriodToForm(DB.exams.targets[i]); }
+function examPickTarget(i){ $("exTarget").value=i; loadPeriodToForm(DB.exams.targets[i]); $("exTarget").scrollIntoView({behavior:"smooth",block:"center"}); }
+function examFormReset(){ $("exTarget").value=""; $("exSem").value="1학기"; $("exType").value="중간"; $("exStart").value=""; $("exEnd").value=""; $("exMaths").innerHTML=""; addMathRow(); }
+async function saveExam(btn){
+  const token = localStorage.getItem("gh_write_token");
+  if(!token){ toast("먼저 ⚙에서 토큰을 설정하세요"); openSettings(); return; }
+  const i=$("exTarget").value;
+  if(i===""){ toast("학교·학년을 선택하세요"); return; }
+  const t=DB.exams.targets[i];
+  if(!$("exStart").value){ toast("시험 기간을 입력하세요"); return; }
+  const maths=[...document.querySelectorAll("#exMaths .exrow")].map(r=>({
+    subject:r.querySelector(".exSubj").value.trim(), date:r.querySelector(".exDate").value, scope:r.querySelector(".exScope").value.trim()
+  })).filter(m=>m.date||m.subject);
+  const period={school:t.school,grade:t.grade,semester:$("exSem").value,type:$("exType").value,start:$("exStart").value,end:$("exEnd").value,subjects:maths};
+  btn.disabled=true; btn.textContent="저장 중…";
+  try{
+    const r=await fetch(`https://api.github.com/repos/${REPO}/contents/exams.json`,{headers:{Authorization:"token "+token,Accept:"application/vnd.github.v3+json"}});
+    const meta=await r.json(); const sha=meta.sha;
+    const exams=JSON.parse(decodeURIComponent(escape(atob((meta.content||"").replace(/\n/g,"")))));
+    const key=p=>[p.school,p.grade,p.semester,p.type].join("|");
+    exams.exam_periods=(exams.exam_periods||[]).filter(x=>key(x)!==key(period));
+    exams.exam_periods.push(period);
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(exams,null,2))));
+    const pr=await fetch(`https://api.github.com/repos/${REPO}/contents/exams.json`,{method:"PUT",
+      headers:{Authorization:"token "+token,Accept:"application/vnd.github.v3+json"},
+      body:JSON.stringify({message:`시험등록 ${period.school} ${period.grade} ${period.semester}${period.type}`,content,sha})});
+    if(pr.ok){ toast("✅ 시험 등록 완료"); DB.exams=exams; render(); }
+    else{ const e=await pr.json(); toast("실패: "+(e.message||pr.status)); btn.disabled=false; btn.textContent="💾 저장"; }
+  }catch(e){ toast("오류: "+e.message); btn.disabled=false; btn.textContent="💾 저장"; }
 }
 
 function renderDiff(){
