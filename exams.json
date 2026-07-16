@@ -124,27 +124,17 @@
   "national": [
     {
       "name": "9월 평가원 모의평가",
-      "date": "",
+      "date": "2026-09-02",
       "targetGrades": [
         "고3"
-      ],
-      "note": "날짜 확인 후 입력"
-    },
-    {
-      "name": "10월 교육청 학력평가",
-      "date": "",
-      "targetGrades": [
-        "고3"
-      ],
-      "note": "날짜 확인 후 입력"
+      ]
     },
     {
       "name": "2027학년도 수능",
-      "date": "",
+      "date": "2026-11-19",
       "targetGrades": [
         "고3"
-      ],
-      "note": "날짜 확인 후 입력"
+      ]
     }
   ],
   "student_overrides": {}
