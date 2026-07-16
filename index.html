@@ -5,517 +5,413 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>프라임K수학 수납체크</title>
+<title>프라임K 교적 대시보드</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body {
-    font-family: 'Pretendard Variable', 'Noto Sans KR', -apple-system, sans-serif;
-    background: linear-gradient(180deg, #f0f0f8 0%, #e8e8f0 100%);
-    min-height: 100vh; color: #1a1a2e;
-  }
+  :root{ --navy:#1a1a2e; --navy2:#2d2d50; --gold:#d4a843; --cream:#faf6ee; --line:#e8e8ef; --muted:#8b8ba0; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:'Pretendard Variable','Noto Sans KR',-apple-system,sans-serif;
+        background:linear-gradient(180deg,#f0f0f8 0%,#e8e8f0 100%); color:var(--navy); min-height:100vh; padding-bottom:76px; }
+  .header{ background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%); color:#fff; padding:18px 18px 16px; }
+  .header-top{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .header-label{ font-size:11px; font-weight:600; color:#8888aa; letter-spacing:.08em; }
+  .header-title{ font-size:20px; font-weight:800; letter-spacing:-.03em; }
+  .header-title span{ color:var(--gold); }
+  .header-date{ text-align:right; font-size:12px; color:#aaaacc; }
+  .gear{ background:rgba(255,255,255,.1); border:none; color:#fff; width:32px; height:32px; border-radius:9px; font-size:15px; cursor:pointer; margin-left:8px; }
 
-  /* Header */
-  .header {
-    background: linear-gradient(135deg, #1a1a2e 0%, #2d2d50 100%);
-    padding: 20px 20px 24px; color: #fff;
-  }
-  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-  .header-label { font-size: 11px; font-weight: 600; color: #8888aa; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
-  .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; }
-  .header-date { text-align: right; font-size: 13px; color: #aaaacc; font-weight: 500; }
-  .header-date-main { font-weight: 700; color: #ddddf0; font-size: 14px; }
+  .content{ padding:14px; max-width:560px; margin:0 auto; }
+  h2.sec{ font-size:15px; font-weight:800; margin:18px 2px 10px; display:flex; align-items:center; gap:6px; }
+  h2.sec:first-child{ margin-top:6px; }
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--gold); }
 
-  /* Stats */
-  .stats { display: flex; gap: 8px; }
-  .stat-card { flex: 1; border-radius: 12px; padding: 12px; text-align: center; background: rgba(255,255,255,0.08); }
-  .stat-card.done { background: rgba(34,197,94,0.12); }
-  .stat-number { font-size: 22px; font-weight: 800; }
-  .stat-number.green { color: #4ade80; }
-  .stat-label { font-size: 11px; color: #8888aa; font-weight: 600; }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .scard{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px; box-shadow:0 1px 4px rgba(0,0,0,.04); }
+  .scard .k{ font-size:12px; color:var(--muted); font-weight:600; margin-bottom:4px; }
+  .scard .v{ font-size:26px; font-weight:800; letter-spacing:-.02em; }
+  .scard .v small{ font-size:13px; font-weight:600; color:var(--muted); }
+  .scard.warn .v{ color:#e07b4c; } .scard.red .v{ color:#d64545; } .scard.green .v{ color:#22a06b; }
 
-  /* Hint */
-  .hint {
-    margin: 16px 16px 8px; padding: 10px 14px;
-    background: #fff; border-radius: 10px;
-    font-size: 12px; color: #666; text-align: center;
-    font-weight: 500; border: 1px dashed #d0d0e0;
-  }
+  .card{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,.04); }
+  .row{ display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid #f2f2f7; }
+  .row:last-child{ border-bottom:none; }
+  .avatar{ width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;
+           background:linear-gradient(135deg,#d4a84322,#d4a84344); color:#a07d1e; }
+  .row .nm{ font-size:15px; font-weight:700; }
+  .row .sub{ font-size:12px; color:var(--muted); margin-top:1px; }
+  .row .right{ margin-left:auto; text-align:right; font-size:12px; color:var(--muted); }
+  .pill{ display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; }
+  .pill.g{ background:#eef7f1; color:#22a06b; } .pill.o{ background:#fdf1e9; color:#e07b4c; } .pill.r{ background:#fdeded; color:#d64545; } .pill.n{ background:#eef; color:#667; }
 
-  /* Category */
-  .category { margin-bottom: 16px; }
-  .category-header {
-    display: flex; align-items: center; justify-content: space-between;
-    width: 100%; padding: 14px 18px; border: none; cursor: pointer;
-    font-family: inherit; transition: all 0.2s ease;
-  }
-  .category-header.expanded { border-radius: 14px 14px 0 0; }
-  .category-header.collapsed { border-radius: 14px; }
-  .category-left { display: flex; align-items: center; gap: 10px; }
-  .category-badge {
-    display: inline-flex; align-items: center; justify-content: center;
-    padding: 4px 10px; border-radius: 8px; color: #fff;
-    font-size: 13px; font-weight: 800; letter-spacing: -0.02em;
-  }
-  .category-subtitle { font-size: 14px; color: #555; font-weight: 600; }
-  .category-right { display: flex; align-items: center; gap: 8px; }
-  .category-count {
-    background: #fff; border-radius: 20px; padding: 2px 10px;
-    font-size: 13px; font-weight: 700;
-  }
-  .category-arrow {
-    font-size: 16px; color: #999; display: inline-block; transition: transform 0.2s ease;
-  }
-  .category-arrow.open { transform: rotate(180deg); }
-  .category-body { padding: 12px; border-radius: 0 0 14px 14px; border-top: none; }
-  .category-empty {
-    text-align: center; padding: 16px; font-size: 13px; color: #aaa; font-weight: 500;
-  }
+  .grade-h{ font-size:12px; font-weight:800; color:var(--gold); margin:14px 2px 6px; }
+  .grade-h:first-child{ margin-top:2px; }
 
-  /* Student Card */
-  .student-card {
-    display: flex; align-items: stretch;
-    width: 100%; background: #fff; border: 1.5px solid #e8e8ef;
-    border-radius: 14px; overflow: hidden;
-    transition: all 0.2s ease; margin-bottom: 10px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  }
-  .student-card:last-child { margin-bottom: 0; }
-  .student-card.copied {
-    background: #f0fdf4; border-color: #86efac;
-    box-shadow: 0 2px 12px rgba(34,197,94,0.15);
-  }
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:6px; border:none; border-radius:11px; font-family:inherit; font-weight:700; cursor:pointer; }
+  .btn-primary{ background:var(--gold); color:var(--navy); padding:13px 16px; font-size:15px; }
+  .btn-outline{ background:#fff; border:2px solid var(--navy); color:var(--navy); padding:12px 16px; font-size:14px; }
+  .btn-nav{ background:var(--navy); color:#fff; padding:12px 16px; font-size:14px; }
+  .btn-row{ display:flex; gap:10px; }
+  .btn-row .btn{ flex:1; }
+  .btn:disabled{ opacity:.5; }
 
-  /* 메인 영역 - 탭하면 복사 */
-  .student-main {
-    flex: 1; display: flex; align-items: center; gap: 14px;
-    padding: 14px 0 14px 16px; cursor: pointer;
-    background: none; border: none; text-align: left; font-family: inherit;
-    transition: background 0.15s; min-width: 0;
-  }
-  .student-main:active { background: rgba(0,0,0,0.02); }
-  .student-avatar {
-    width: 44px; height: 44px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 15px; font-weight: 700; flex-shrink: 0; transition: all 0.2s ease;
-  }
-  .student-avatar.copied { background: #22c55e !important; color: #fff !important; }
-  .student-name { font-size: 16px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.02em; margin-bottom: 2px; }
-  .student-info { font-size: 12px; color: #8b8ba0; font-weight: 500; margin-bottom: 1px; }
-  .student-phone { font-size: 11px; color: #b0b0c0; font-weight: 500; font-variant-numeric: tabular-nums; }
+  select,input,textarea{ width:100%; border:1.5px solid var(--line); border-radius:10px; padding:11px 12px; font-size:15px; font-family:inherit; background:#fff; color:var(--navy); }
+  select:focus,input:focus,textarea:focus{ outline:none; border-color:var(--gold); }
+  label.lb{ font-size:13px; font-weight:700; display:block; margin:12px 2px 6px; }
+  .book-row{ display:flex; gap:8px; margin-bottom:8px; }
+  .book-row input.bn{ flex:1; } .book-row input.bp{ width:104px; text-align:right; }
+  .book-row button{ width:34px; border:none; border-radius:8px; background:#f1ece0; color:#a09a8a; font-size:16px; cursor:pointer; flex-shrink:0; }
+  .add-btn{ width:100%; padding:10px; border:1.5px dashed var(--gold); background:transparent; color:var(--navy); border-radius:10px; font-weight:700; cursor:pointer; }
+  .sumbox{ background:var(--navy); color:#fff; border-radius:12px; padding:13px 15px; margin-top:10px; display:flex; justify-content:space-between; align-items:center; }
+  .sumbox .t{ font-size:12px; opacity:.75; } .sumbox .v{ font-size:15px; font-weight:700; } .sumbox .disc{ color:var(--gold); font-size:20px; font-weight:900; }
+  textarea#bookPreview{ height:260px; font-size:14px; line-height:1.6; white-space:pre-wrap; }
 
-  /* 액션 버튼들 */
-  .student-actions {
-    display: flex; align-items: center; gap: 0; flex-shrink: 0;
-  }
-  .action-btn {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 12px 14px; border: none; cursor: pointer; font-family: inherit;
-    transition: background 0.15s; background: none; min-width: 56px;
-  }
-  .action-btn:active { background: rgba(0,0,0,0.04); }
-  .action-btn .icon { font-size: 18px; margin-bottom: 2px; }
-  .action-btn .label { font-size: 10px; font-weight: 600; color: #999; }
-  .action-divider { width: 1px; height: 28px; background: #eee; }
+  .dday{ display:flex; align-items:center; gap:10px; padding:12px; border-radius:12px; background:#fff; border:1px solid var(--line); margin-bottom:8px; }
+  .dbadge{ min-width:56px; text-align:center; padding:7px 4px; border-radius:10px; font-weight:900; font-size:15px; color:#fff; flex-shrink:0; }
+  .dbadge.near{ background:#d64545; } .dbadge.soon{ background:#e07b4c; } .dbadge.far{ background:#5a7db0; } .dbadge.done{ background:#b0b0c0; }
 
-  .copy-status {
-    font-size: 10px; font-weight: 700; padding: 3px 8px;
-    border-radius: 6px; margin-right: 10px; flex-shrink: 0;
-  }
-  .copy-status.done { color: #22c55e; background: #f0fdf4; }
-  .copy-status.pending { color: #b0b0c0; background: #f5f5fa; }
+  .empty{ text-align:center; padding:40px 20px; color:#aaa; font-weight:600; font-size:14px; }
+  .loading{ text-align:center; padding:50px; color:#999; }
+  .spin{ width:28px; height:28px; border:3px solid #e0e0e0; border-top-color:var(--navy); border-radius:50%; animation:sp .8s linear infinite; margin:0 auto 10px; }
+  @keyframes sp{ to{ transform:rotate(360deg); } }
 
-  /* Preview Modal */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(4px); display: flex;
-    align-items: flex-end; justify-content: center;
-    z-index: 900; padding: 20px; animation: fadeIn 0.2s ease;
-  }
-  .modal-content {
-    background: #fff; border-radius: 20px;
-    width: 100%; max-width: 420px; max-height: 75vh;
-    overflow: auto; padding: 24px; animation: slideUp 0.3s ease;
-  }
-  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-  .modal-title { font-size: 18px; font-weight: 800; }
-  .modal-close {
-    background: #f0f0f5; border: none; border-radius: 10px;
-    width: 32px; height: 32px; cursor: pointer; font-size: 16px; color: #888;
-  }
-  .modal-body {
-    background: #f8f8fc; border-radius: 14px; padding: 16px;
-    font-size: 13.5px; line-height: 1.7; color: #333;
-    white-space: pre-wrap; margin-bottom: 16px;
-    max-height: 45vh; overflow-y: auto;
-  }
-  .modal-actions { display: flex; gap: 8px; }
-  .modal-btn {
-    flex: 1; padding: 14px; color: #fff; border: none;
-    border-radius: 12px; font-size: 15px; font-weight: 700;
-    cursor: pointer; font-family: inherit; text-decoration: none;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-  }
-  .modal-btn.secondary { background: #e8e8ef; color: #555; }
+  .tabbar{ position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--line); display:flex; z-index:100; padding-bottom:env(safe-area-inset-bottom); }
+  .tabbar button{ flex:1; background:none; border:none; padding:9px 0 8px; cursor:pointer; font-family:inherit; color:#a0a0b0; display:flex; flex-direction:column; align-items:center; gap:2px; position:relative; }
+  .tabbar button.on{ color:var(--navy); }
+  .tabbar .ic{ font-size:19px; }
+  .tabbar .lb2{ font-size:10px; font-weight:700; }
+  .tabbar .badge{ position:absolute; top:4px; right:22%; background:#d64545; color:#fff; font-size:9px; font-weight:800; min-width:15px; height:15px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 3px; }
 
-  /* Empty state */
-  .empty { text-align: center; padding: 60px 20px; color: #aaa; }
-  .empty-icon { font-size: 40px; margin-bottom: 12px; }
-  .empty-text { font-size: 16px; font-weight: 700; }
+  .toast{ position:fixed; bottom:88px; left:50%; transform:translateX(-50%); background:var(--navy); color:#fff; padding:11px 22px; border-radius:24px; font-size:14px; font-weight:600; opacity:0; transition:opacity .3s; z-index:200; pointer-events:none; white-space:nowrap; }
+  .toast.show{ opacity:1; }
 
-  /* Loading */
-  .loading { text-align: center; padding: 60px 20px; color: #888; }
-  .loading-spinner {
-    width: 32px; height: 32px; border: 3px solid #e0e0e0;
-    border-top: 3px solid #1a1a2e; border-radius: 50%;
-    animation: spin 0.8s linear infinite; margin: 0 auto 12px;
-  }
-
-  /* Error */
-  .error-box {
-    margin: 16px; padding: 16px; background: #fef2f2;
-    border: 1.5px solid #fecaca; border-radius: 14px; text-align: center;
-  }
-  .error-icon { font-size: 28px; margin-bottom: 8px; }
-  .error-text { font-size: 14px; color: #dc2626; font-weight: 600; margin-bottom: 4px; }
-  .error-sub { font-size: 12px; color: #999; }
-
-  /* Toast */
-  .toast {
-    position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
-    background: #1a1a2e; color: #fff; padding: 12px 24px;
-    border-radius: 12px; font-size: 14px; font-weight: 600;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 1000; white-space: nowrap; letter-spacing: -0.01em;
-  }
-  .toast.visible { bottom: 32px; }
-
-  .content { padding: 8px 16px 100px; }
-
-  /* Refresh */
-  .refresh-btn {
-    position: fixed; bottom: 24px; right: 24px;
-    width: 52px; height: 52px; border-radius: 50%;
-    background: #1a1a2e; color: #fff; border: none;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-    font-size: 20px; cursor: pointer; z-index: 800;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform 0.2s ease;
-  }
-  .refresh-btn:active { transform: scale(0.9); }
-
-  @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(3px); display:flex; align-items:flex-end; justify-content:center; z-index:300; padding:16px; }
+  .modal{ background:#fff; border-radius:20px; width:100%; max-width:440px; max-height:80vh; overflow:auto; padding:20px; }
+  .modal h3{ font-size:17px; font-weight:800; margin-bottom:12px; }
+  .modal .mbody{ background:#f8f8fc; border-radius:12px; padding:14px; font-size:13.5px; line-height:1.7; white-space:pre-wrap; margin-bottom:14px; max-height:44vh; overflow:auto; }
+  .modal .close{ float:right; background:#f0f0f5; border:none; border-radius:9px; width:30px; height:30px; font-size:15px; cursor:pointer; color:#888; }
+  .hint{ font-size:11.5px; color:var(--muted); line-height:1.5; margin-top:6px; }
 </style>
 </head>
 <body>
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-label">맥시멈K컨설팅 &amp; 프라임K수학</div>
+      <div class="header-title">프라임<span>K</span> 교적 대시보드</div>
+    </div>
+    <div style="display:flex;align-items:flex-start">
+      <div class="header-date"><div id="hDate">—</div><div id="hUpd" style="opacity:.7"></div></div>
+      <button class="gear" onclick="openSettings()">⚙</button>
+    </div>
+  </div>
+</div>
 
-<div id="app"></div>
-<div id="toast" class="toast"></div>
+<div class="content" id="view"><div class="loading"><div class="spin"></div>불러오는 중…</div></div>
+
+<div class="tabbar" id="tabbar"></div>
+<div class="toast" id="toast"></div>
+<div id="modalRoot"></div>
 
 <script>
-// ============================================================
-// 설정
-// ============================================================
-const CONFIG = {
-  dataUrl: './data.json',
-  bustCache: true,
-};
+const REPO = "trmaximumk-afk/subnap-check";
+const FILES = { payment:"data.json", students:"students.json", exams:"exams.json", changes:"changes.json", timetable:"timetable.json" };
+const TABS = [
+  { id:"home",   ic:"🏠", lb:"홈" },
+  { id:"roster", ic:"👥", lb:"현황" },
+  { id:"pay",    ic:"💰", lb:"수납" },
+  { id:"book",   ic:"📚", lb:"교재" },
+  { id:"exam",   ic:"📝", lb:"시험" },
+  { id:"diff",   ic:"🔍", lb:"대조" },
+];
+let DB = {};
+let tab = "home";
+let bookManual = false;
 
-// ============================================================
-// 상태
-// ============================================================
-let state = {
-  data: null,
-  error: null,
-  loading: true,
-  expanded: {},
-  copiedNames: new Set(),
-  previewStudent: null,
-  previewColor: null,
-};
+const $ = id => document.getElementById(id);
+const bust = url => url + (url.includes("?")?"&":"?") + "t=" + Date.now();
+function fmtPhone(p){ if(!p) return ""; p=(""+p).replace(/\D/g,""); if(p.length===11) return p.slice(0,3)+"-"+p.slice(3,7)+"-"+p.slice(7); if(p.length===10) return p.slice(0,3)+"-"+p.slice(3,6)+"-"+p.slice(6); return p; }
+const won = n => (n||0).toLocaleString("ko-KR")+"원";
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1900); }
+function esc(s){ return (s==null?"":(""+s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+async function copy(text){ try{ await navigator.clipboard.writeText(text); return true; }catch{ const ta=document.createElement("textarea"); ta.value=text; ta.style.cssText="position:fixed;left:-9999px"; document.body.appendChild(ta); ta.select(); const ok=document.execCommand("copy"); document.body.removeChild(ta); return ok; } }
+function today(){ const d=new Date(); return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+function daysUntil(ymd){ if(!ymd) return null; const p=(""+ymd).split("-").map(Number); if(p.length<3) return null; const t=new Date(p[0],p[1]-1,p[2]); return Math.round((t-today())/86400000); }
 
-// 전화번호 포맷: 01012345678 → 010-1234-5678
-function formatPhone(phone) {
-  if (!phone) return '';
-  const p = phone.replace(/\D/g, '');
-  if (p.length === 11) return p.slice(0,3) + '-' + p.slice(3,7) + '-' + p.slice(7);
-  if (p.length === 10) return p.slice(0,3) + '-' + p.slice(3,6) + '-' + p.slice(6);
-  return phone;
+async function loadAll(){
+  const jobs = Object.entries(FILES).map(async ([k,f])=>{
+    try{ const r=await fetch(bust("./"+f)); DB[k]= r.ok ? await r.json() : null; }
+    catch{ DB[k]=null; }
+  });
+  await Promise.all(jobs);
 }
 
-// 데이터 로드
-async function loadData() {
-  state.loading = true;
-  state.error = null;
-  render();
-  try {
-    const url = CONFIG.bustCache ? `${CONFIG.dataUrl}?t=${Date.now()}` : CONFIG.dataUrl;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    state.data = await res.json();
-    state.loading = false;
-    state.data.categories.forEach(c => { state.expanded[c.id] = true; });
-  } catch (e) {
-    state.error = e.message;
-    state.loading = false;
+function render(){
+  renderTabbar();
+  const map = { home:renderHome, roster:renderRoster, pay:renderPay, book:renderBook, exam:renderExam, diff:renderDiff };
+  $("view").innerHTML = (map[tab]||renderHome)();
+  if(tab==="book") initBook();
+  window.scrollTo(0,0);
+}
+function go(t){ tab=t; render(); }
+
+function renderTabbar(){
+  const chg = DB.changes && DB.changes.summary ? (DB.changes.summary.new+DB.changes.summary.withdrawn+DB.changes.summary.changed) : 0;
+  $("tabbar").innerHTML = TABS.map(t=>{
+    let badge="";
+    if(t.id==="diff" && chg>0) badge=`<span class="badge">${chg}</span>`;
+    if(t.id==="pay"){ const u=payUnpaidCount(); if(u>0) badge=`<span class="badge">${u}</span>`; }
+    return `<button class="${tab===t.id?'on':''}" onclick="go('${t.id}')">${badge}<span class="ic">${t.ic}</span><span class="lb2">${t.lb}</span></button>`;
+  }).join("");
+}
+
+function payUnpaidCount(){ const d=DB.payment; if(!d||!d.categories) return 0; return d.categories.reduce((s,c)=>s+(c.students?c.students.length:0),0); }
+function nextExamsForBadge(){ return computeDdays().filter(x=>x.d!=null && x.d>=0).sort((a,b)=>a.d-b.d); }
+
+function renderHome(){
+  const stu = DB.students; const chg = DB.changes;
+  const cnt = stu ? stu.count : "—";
+  const unpaid = payUnpaidCount();
+  const chgN = chg&&chg.summary ? (chg.summary.new+chg.summary.withdrawn+chg.summary.changed) : 0;
+  const nx = nextExamsForBadge()[0];
+  const nxTxt = nx ? `D-${nx.d}` : "—";
+  const nxSub = nx ? `${nx.school} ${nx.grade}` : "예정 없음";
+  let cards = `
+    <div class="grid">
+      <div class="scard"><div class="k">재원생</div><div class="v">${cnt}<small>명</small></div></div>
+      <div class="scard ${unpaid?'red':'green'}"><div class="k">미납 안내 대상</div><div class="v">${unpaid}<small>건</small></div></div>
+      <div class="scard ${chgN?'warn':''}"><div class="k">오늘 명단 변경</div><div class="v">${chgN}<small>건</small></div></div>
+      <div class="scard"><div class="k">임박 시험</div><div class="v" style="font-size:22px">${nxTxt}</div><div class="k" style="margin:4px 0 0">${esc(nxSub)}</div></div>
+    </div>`;
+  const dds = nextExamsForBadge().slice(0,3);
+  let exPrev = dds.length ? `<h2 class="sec"><span class="dot"></span>다가오는 시험</h2>` + dds.map(ddayRow).join("") : "";
+  let chPrev = "";
+  if(chg && chg.changes && chg.changes.length){
+    chPrev = `<h2 class="sec"><span class="dot"></span>오늘 명단 변경</h2><div class="card">` +
+      chg.changes.slice(0,5).map(c=>`<div class="row"><div class="nm">${esc(c.name)}</div><div class="right"><span class="pill ${c.kind==='new'?'g':c.kind==='withdrawn'?'r':'o'}">${esc(c.label||c.kind)}</span></div></div>`).join("") + `</div>`;
   }
-  render();
+  return `<h2 class="sec"><span class="dot"></span>오늘 요약</h2>${cards}${exPrev}${chPrev}
+    <div style="margin-top:18px"><button class="btn btn-nav" style="width:100%" onclick="go('pay')">💰 수납체크 열기</button></div>`;
 }
 
-// 클립보드 복사
-async function copyText(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;opacity:0;left:-9999px';
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand('copy');
-    document.body.removeChild(ta);
-    return ok;
-  }
-}
-
-// 토스트
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = '✅ ' + msg;
-  el.classList.add('visible');
-  setTimeout(() => el.classList.remove('visible'), 1800);
-}
-
-// 학생 복사
-async function handleCopy(key) {
-  const stu = window.__students[key];
-  if (!stu) return;
-  await copyText(stu.message);
-  state.copiedNames.add(stu.name);
-  showToast(`${stu.name} 문자 복사 완료`);
-  render();
-}
-
-// 문자앱 열기 (복사 후 문자앱으로 이동)
-async function openSMS(key) {
-  const stu = window.__students[key];
-  if (!stu) return;
-  await copyText(stu.message);
-  state.copiedNames.add(stu.name);
-  showToast(`${stu.name} 문자 복사 → 문자앱 이동`);
-  render();
-  // sms: URI로 문자앱 열기
-  setTimeout(() => {
-    window.location.href = `sms:${stu.phone}`;
-  }, 300);
-}
-
-// 미리보기
-function openPreview(key, color) {
-  state.previewStudent = window.__students[key];
-  state.previewColor = color;
-  state._previewKey = key;
-  render();
-}
-function closePreview() {
-  state.previewStudent = null;
-  render();
-}
-
-// 카테고리 토글
-function toggleCategory(id) {
-  state.expanded[id] = !state.expanded[id];
-  render();
-}
-
-// ============================================================
-// 렌더링
-// ============================================================
-function render() {
-  const app = document.getElementById('app');
-  const d = state.data;
-
-  if (state.loading) {
-    app.innerHTML = `
-      <div class="header"><div class="header-top"><div>
-        <div class="header-label">프라임K수학</div>
-        <div class="header-title">수납 체크 📋</div>
-      </div></div></div>
-      <div class="loading"><div class="loading-spinner"></div><div>데이터를 불러오는 중...</div></div>`;
-    return;
-  }
-
-  if (state.error) {
-    app.innerHTML = `
-      <div class="header"><div class="header-top"><div>
-        <div class="header-label">프라임K수학</div>
-        <div class="header-title">수납 체크 📋</div>
-      </div></div></div>
-      <div class="error-box">
-        <div class="error-icon">⚠️</div>
-        <div class="error-text">데이터를 불러올 수 없습니다</div>
-        <div class="error-sub">${state.error}</div>
-        <div class="error-sub" style="margin-top:8px">data.json 파일이 있는지 확인해주세요</div>
-      </div>`;
-    return;
-  }
-
-  const totalStudents = d.categories.reduce((s, c) => s + c.students.length, 0);
-  const copiedCount = state.copiedNames.size;
-
-  // 학생 참조 저장
-  window.__students = {};
-  d.categories.forEach(cat => {
-    cat.students.forEach((stu, idx) => {
-      window.__students[`${cat.id}_${idx}`] = stu;
+function renderRoster(){
+  const stu = DB.students;
+  if(!stu || !stu.students) return errBox("students.json");
+  const order = ["중1","중2","중3","고1","고2","고3"];
+  let html = `<h2 class="sec"><span class="dot"></span>재원생 ${stu.count}명 <span style="font-weight:500;font-size:12px;color:var(--muted)">· ${esc(stu.updated_at)}</span></h2>`;
+  order.forEach(g=>{
+    const list = stu.students.filter(s=>s.grade===g);
+    if(!list.length) return;
+    html += `<div class="grade-h">${g} (${list.length})</div><div class="card">`;
+    list.forEach(s=>{
+      html += `<div class="row"><div class="avatar">${esc((s.name||"").charAt(0))}</div>
+        <div><div class="nm">${esc(s.name)}</div><div class="sub">${esc(s.school||"학교미입력")} · ${esc(s.cls||"-")}</div></div>
+        <div class="right">${ s.phone?`<a href="tel:${s.phone}" style="color:var(--gold);font-weight:700;text-decoration:none">${fmtPhone(s.phone)}</a>`:"-" }</div></div>`;
     });
+    html += `</div>`;
   });
-
-  let categoriesHtml = '';
-  d.categories.forEach(cat => {
-    const isOpen = state.expanded[cat.id];
-    const color = cat.color || '#888';
-    const count = cat.students.length;
-
-    let studentsHtml = '';
-    if (isOpen) {
-      if (count === 0) {
-        studentsHtml = `<div class="category-empty">해당 학생이 없습니다</div>`;
-      } else {
-        cat.students.forEach((stu, idx) => {
-          const key = `${cat.id}_${idx}`;
-          const isCopied = state.copiedNames.has(stu.name);
-
-          studentsHtml += `
-            <div class="student-card ${isCopied ? 'copied' : ''}">
-              <button class="student-main" onclick="handleCopy('${key}')">
-                <div class="student-avatar ${isCopied ? 'copied' : ''}"
-                     style="background:${isCopied ? '#22c55e' : `linear-gradient(135deg, ${color}22, ${color}44)`};
-                            color:${isCopied ? '#fff' : color}">
-                  ${isCopied ? '✓' : stu.name.charAt(0)}
-                </div>
-                <div style="min-width:0">
-                  <div class="student-name">${stu.name}</div>
-                  <div class="student-info">${stu.grade} · ${stu.amount}원</div>
-                  <div class="student-phone">${formatPhone(stu.phone)}</div>
-                </div>
-              </button>
-              <div class="student-actions">
-                <span class="copy-status ${isCopied ? 'done' : 'pending'}">${isCopied ? '복사됨' : ''}</span>
-                <div class="action-divider"></div>
-                <button class="action-btn" onclick="openPreview('${key}','${color}')" title="미리보기">
-                  <span class="icon">👁</span>
-                  <span class="label">미리보기</span>
-                </button>
-                <div class="action-divider"></div>
-                <button class="action-btn" onclick="openSMS('${key}')" title="문자보내기">
-                  <span class="icon">💬</span>
-                  <span class="label">문자</span>
-                </button>
-              </div>
-            </div>`;
-        });
-      }
-    }
-
-    categoriesHtml += `
-      <div class="category">
-        <button class="category-header ${isOpen ? 'expanded' : 'collapsed'}"
-                style="background:linear-gradient(135deg, ${color}10, ${color}08); border:1.5px solid ${color}30;"
-                onclick="toggleCategory('${cat.id}')">
-          <div class="category-left">
-            <span class="category-badge" style="background:${color}">${cat.label}</span>
-            <span class="category-subtitle">${cat.subtitle}</span>
-          </div>
-          <div class="category-right">
-            <span class="category-count" style="border:1.5px solid ${color}40; color:${color}">${count}명</span>
-            <span class="category-arrow ${isOpen ? 'open' : ''}">▾</span>
-          </div>
-        </button>
-        ${isOpen ? `<div class="category-body" style="background:${color}08; border:1.5px solid ${color}20; border-top:none;">${studentsHtml}</div>` : ''}
-      </div>`;
-  });
-
-  if (totalStudents === 0) {
-    categoriesHtml = `
-      <div class="empty">
-        <div class="empty-icon">🎉</div>
-        <div class="empty-text">오늘은 수납 알림 대상이 없습니다</div>
-      </div>`;
-  }
-
-  app.innerHTML = `
-    <div class="header">
-      <div class="header-top">
-        <div>
-          <div class="header-label">맥시멈K컨설팅 & 프라임K수학</div>
-          <div class="header-title">수납 체크 📋</div>
-        </div>
-        <div class="header-date">
-          <div class="header-date-main">${d.date}</div>
-          <div>${d.generated_at} 생성</div>
-        </div>
-      </div>
-      <div class="stats">
-        <div class="stat-card">
-          <div class="stat-number">${totalStudents}</div>
-          <div class="stat-label">전체</div>
-        </div>
-        <div class="stat-card done">
-          <div class="stat-number green">${copiedCount}</div>
-          <div class="stat-label">발송 완료</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">${totalStudents - copiedCount}</div>
-          <div class="stat-label">미발송</div>
-        </div>
-      </div>
-    </div>
-    <div class="hint">👆 학생 이름 탭 → 문자 복사 &nbsp;|&nbsp; 💬 문자 버튼 → 복사 후 문자앱 바로 이동</div>
-    <div class="content">${categoriesHtml}</div>
-    <button class="refresh-btn" onclick="location.reload()" title="새로고침">🔄</button>
-  `;
-
-  // 미리보기 모달
-  if (state.previewStudent) {
-    const stu = state.previewStudent;
-    const col = state.previewColor || '#1a1a2e';
-    const key = state._previewKey;
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.onclick = closePreview;
-    modal.innerHTML = `
-      <div class="modal-content" onclick="event.stopPropagation()">
-        <div class="modal-header">
-          <div>
-            <div class="modal-title">${stu.name}</div>
-            <div style="font-size:12px;color:#888;margin-top:2px">${stu.grade} · ${formatPhone(stu.phone)}</div>
-          </div>
-          <button class="modal-close" onclick="closePreview()">✕</button>
-        </div>
-        <div class="modal-body">${stu.message}</div>
-        <div class="modal-actions">
-          <button class="modal-btn" style="background:${col}"
-                  onclick="handleCopy('${key}'); closePreview();">
-            📋 복사하기
-          </button>
-          <button class="modal-btn secondary"
-                  onclick="handleCopy('${key}'); closePreview(); setTimeout(()=>{window.location.href='sms:${stu.phone}'},300);">
-            💬 복사 + 문자
-          </button>
-        </div>
-      </div>`;
-    app.appendChild(modal);
-  }
+  return html;
 }
 
-// 시작
-loadData();
+function renderPay(){
+  const d = DB.payment;
+  let head = `<h2 class="sec"><span class="dot"></span>수납 체크 <span style="font-weight:500;font-size:12px;color:var(--muted)">· ${d?esc(d.date+" "+(d.generated_at||"")):""}</span></h2>`;
+  let actions = `<div class="btn-row" style="margin-bottom:8px">
+      <button class="btn btn-primary" onclick="triggerReq('payment_refresh',this)">🔄 수납 재발행</button>
+      <button class="btn btn-nav" onclick="triggerReq('ttt_sync',this)">🔗 통통통 연동</button>
+    </div><div class="hint" style="margin:0 2px 14px">두 버튼은 PC가 1분 내 실행 후 화면을 갱신합니다(최초 1회 ⚙에서 토큰 설정 필요).</div>`;
+  if(!d || !d.categories) return head+actions+errBox("data.json");
+  let body = "";
+  window.__pay = {};
+  d.categories.forEach(c=>{
+    const color = c.color || "#888";
+    body += `<div style="margin-bottom:6px;font-weight:800;font-size:13px;color:${color}">${esc(c.label)} · ${esc(c.subtitle)} <span style="color:var(--muted);font-weight:600">(${c.students.length}명)</span></div>`;
+    if(!c.students.length){ body += `<div class="card" style="text-align:center;color:#bbb;font-size:13px;padding:12px">없음</div>`; return; }
+    body += `<div class="card">`;
+    c.students.forEach((s,i)=>{
+      const key = c.id+"_"+i; window.__pay[key]=s;
+      body += `<div class="row">
+        <div class="avatar" style="background:linear-gradient(135deg,${color}22,${color}44);color:${color}">${esc((s.name||"").charAt(0))}</div>
+        <div style="min-width:0"><div class="nm">${esc(s.name)}</div><div class="sub">${esc(s.grade||"")} · ${esc(s.amount)}원</div><div class="sub">${fmtPhone(s.phone)}</div></div>
+        <div class="right" style="display:flex;gap:6px">
+          <button class="btn btn-outline" style="padding:8px 10px" onclick="payPreview('${key}')">👁</button>
+          <button class="btn btn-primary" style="padding:8px 12px" onclick="paySms('${key}')">💬</button>
+        </div></div>`;
+    });
+    body += `</div>`;
+  });
+  return head+actions+body;
+}
+function payPreview(key){ const s=window.__pay[key]; showModal(s.name, s.message, [
+  {t:"📋 복사", cls:"btn-primary", fn:()=>{ copy(s.message); toast(s.name+" 복사 완료"); closeModal(); }},
+  {t:"💬 복사+문자", cls:"btn-nav", fn:()=>{ copy(s.message); closeModal(); setTimeout(()=>location.href="sms:"+(""+(s.phone||"")).replace(/\D/g,""),250); }},
+]); }
+async function paySms(key){ const s=window.__pay[key]; await copy(s.message); toast(s.name+" 복사 → 문자앱"); setTimeout(()=>location.href="sms:"+(""+(s.phone||"")).replace(/\D/g,""),250); }
+
+function renderBook(){
+  const stu = DB.students;
+  if(!stu||!stu.students) return errBox("students.json");
+  const order=["중1","중2","중3","고1","고2","고3"];
+  let opts = `<option value="">— 학생 선택 —</option>`;
+  order.forEach(g=>{ const l=stu.students.filter(s=>s.grade===g); if(!l.length) return; opts+=`<optgroup label="${g}">`+l.map(s=>`<option value="${esc(s.name)}">${esc(s.name)} (${g})</option>`).join("")+`</optgroup>`; });
+  return `<h2 class="sec"><span class="dot"></span>교재비 청구 문자</h2>
+    <div class="card">
+      <label class="lb">학생</label>
+      <select id="bkStudent" onchange="bookStudentChange()">${opts}</select>
+      <div style="display:flex;gap:8px;margin-top:8px"><input id="bkPhone" type="tel" placeholder="학부모 번호 (자동)" oninput="bkPhoneSave()"></div>
+      <div class="hint">학부모 번호는 통통통 명단에서 자동으로 채워집니다.</div>
+    </div>
+    <div class="card">
+      <label class="lb">교재 목록 (정가)</label>
+      <div id="bkBooks"></div>
+      <button class="add-btn" onclick="addBook()">＋ 교재 추가</button>
+      <div class="sumbox"><div><div class="t">정가 합계</div><div class="v" id="bkTotal">0원</div></div>
+        <div style="text-align:right"><div class="t">10% 할인가(청구액)</div><div class="disc" id="bkDisc">0원</div></div></div>
+    </div>
+    <div class="card">
+      <label class="lb">문자 미리보기 <span style="font-weight:400;font-size:11px;color:var(--muted)">(수정 가능)</span></label>
+      <textarea id="bookPreview"></textarea>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-outline" onclick="bookCopy()">📋 복사</button>
+        <button class="btn btn-primary" onclick="bookSms()">💬 문자 보내기</button>
+      </div>
+    </div>`;
+}
+const ACCOUNT="케이뱅크 100-116-330052 (김범수)";
+function studentByName(n){ return (DB.students.students||[]).find(s=>s.name===n); }
+function callName(full){ const g=full.length>=3?full.slice(1):full; const last=g.charCodeAt(g.length-1); const jong=(last-0xAC00)%28>0; return jong?g+"이":g; }
+function initBook(){ bookManual=false; if(!$("bkBooks").children.length) addBook(); bookRefresh(); $("bookPreview").addEventListener("input",()=>{bookManual=true;}); }
+function addBook(){ const d=document.createElement("div"); d.className="book-row";
+  d.innerHTML=`<input class="bn" placeholder="교재명 (예: 올백 3-1 기말)" oninput="bookRefresh()"><input class="bp" type="tel" inputmode="numeric" placeholder="정가" oninput="bookRefresh()"><button onclick="this.parentNode.remove();bookRefresh()">✕</button>`;
+  $("bkBooks").appendChild(d); }
+function getBooks(){ return [...document.querySelectorAll("#bkBooks .book-row")].map(r=>({name:r.querySelector(".bn").value.trim(), price:parseInt(r.querySelector(".bp").value.replace(/[^0-9]/g,""))||0})).filter(b=>b.name&&b.price>0); }
+function bookStudentChange(){ bookManual=false; const s=studentByName($("bkStudent").value); const saved=localStorage.getItem("pkphone_"+$("bkStudent").value); $("bkPhone").value = saved || (s&&s.phone?fmtPhone(s.phone):""); bookRefresh(); }
+function bkPhoneSave(){ const n=$("bkStudent").value; if(n) localStorage.setItem("pkphone_"+n, $("bkPhone").value.trim()); }
+function bookBuild(){ const n=$("bkStudent").value; if(!n) return ""; const c=callName(n); const books=getBooks(); const total=books.reduce((a,b)=>a+b.price,0); const disc=Math.round(total*0.9);
+  let m=`${c} 부모님 안녕하세요, 프라임K수학입니다.\n${c} 교재비 안내드립니다.\n📚 교재 목록\n`;
+  books.forEach((b,i)=>{ m+=`${i+1}. ${b.name} (${won(b.price)})\n`; }); if(!books.length) m+=`1. \n`;
+  m+=`📌 교재비 정가${books.length>1?" 합계":""}: ${won(total)}\n📌 10% 할인가: ${won(disc)}\n📌 입금 계좌: ${ACCOUNT}\n📌 입금자명: 학생 이름\n궁금하신 점은 편하게 연락 주세요.`;
+  $("bkTotal").textContent=won(total); $("bkDisc").textContent=won(disc); return m; }
+function bookRefresh(){ if(!bookManual) $("bookPreview").value=bookBuild(); else bookBuild(); }
+function bookCopy(){ const m=$("bookPreview").value; if(!$("bkStudent").value){ toast("학생을 먼저 선택하세요"); return; } copy(m); toast("복사 완료"); }
+function bookSms(){ const m=$("bookPreview").value; const n=$("bkStudent").value; if(!n){ toast("학생을 먼저 선택하세요"); return; } const ph=$("bkPhone").value.replace(/\D/g,""); if(!ph){ toast("학부모 번호를 입력하세요"); return; } copy(m); const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent); location.href=`sms:${ph}${ios?'&':'?'}body=${encodeURIComponent(m)}`; }
+
+function computeDdays(){
+  const ex = DB.exams; const stu = DB.students; if(!ex||!stu) return [];
+  const out = [];
+  (ex.exam_periods||[]).forEach(p=>{
+    const mathDate = (p.math&&p.math[0]&&p.math[0].date) ? p.math[0].date : p.start;
+    const d = daysUntil(mathDate);
+    const who = (stu.students||[]).filter(s=>s.school===p.school && s.grade===p.grade).map(s=>s.name);
+    if(!who.length) return;
+    out.push({ school:p.school, grade:p.grade, label:`${p.semester||""} ${p.type||""}`.trim(), date:mathDate, d, who, kind:"school",
+               subject:(p.math&&p.math[0]?p.math[0].subject:""), scope:(p.math&&p.math[0]?p.math[0].scope:"") });
+  });
+  (ex.national||[]).forEach(n=>{
+    if(!n.date) return; const d=daysUntil(n.date);
+    const who = (stu.students||[]).filter(s=>(n.targetGrades||[]).includes(s.grade)).map(s=>s.name);
+    out.push({ school:"전국", grade:(n.targetGrades||[]).join(","), label:n.name, date:n.date, d, who, kind:"national" });
+  });
+  return out;
+}
+function ddayRow(x){
+  let cls="far", txt = x.d==null?"—":(x.d<0?`+${-x.d}`:`D-${x.d}`);
+  if(x.d==null) cls="done"; else if(x.d<0) cls="done"; else if(x.d<=7) cls="near"; else if(x.d<=21) cls="soon";
+  const sub = x.kind==="national" ? `${esc(x.grade)} · ${esc(x.date||"")}` : `${esc(x.school)} ${esc(x.grade)} · ${esc(x.date||"미입력")}${x.subject?" · "+esc(x.subject):""}`;
+  return `<div class="dday"><div class="dbadge ${cls}">${txt}</div><div><div class="nm">${esc(x.label||"시험")}</div><div class="sub">${sub}</div>${x.scope?`<div class="sub">범위: ${esc(x.scope)}</div>`:""}</div></div>`;
+}
+function renderExam(){
+  const ex = DB.exams;
+  if(!ex) return errBox("exams.json");
+  const dds = computeDdays().filter(x=>x.d==null||x.d>=-3).sort((a,b)=>(a.d==null?9999:a.d)-(b.d==null?9999:b.d));
+  let head = `<h2 class="sec"><span class="dot"></span>시험 D-day</h2>`;
+  let ddHtml = dds.length ? dds.map(ddayRow).join("") : `<div class="empty">등록된 시험 일정이 없습니다.<br>아래 입력대상에 시험기간을 등록하세요.</div>`;
+  let tg = `<h2 class="sec"><span class="dot"></span>시험일정 입력 대상 (${(ex.targets||[]).length})</h2><div class="card">`;
+  (ex.targets||[]).forEach(t=>{
+    const has = (ex.exam_periods||[]).some(p=>p.school===t.school&&p.grade===t.grade);
+    tg += `<div class="row"><div><div class="nm">${esc(t.school)} ${esc(t.grade)}</div><div class="sub">${esc((t.students||[]).join(", "))}</div></div>
+           <div class="right"><span class="pill ${has?'g':'n'}">${has?'등록됨':'미등록'}</span></div></div>`;
+  });
+  tg += `</div><div class="hint" style="margin:2px">시험기간·수학 과목·범위, 수능·모의고사 날짜는 클로드코드에 말씀하시면 exams.json에 입력됩니다.</div>`;
+  return head+ddHtml+tg;
+}
+
+function renderDiff(){
+  const c = DB.changes;
+  if(!c) return errBox("changes.json");
+  const n=c.summary?c.summary.new:0, w=c.summary?c.summary.withdrawn:0, ch=c.summary?c.summary.changed:0;
+  let head = `<h2 class="sec"><span class="dot"></span>통통통-엑셀 대조 <span style="font-weight:500;font-size:12px;color:var(--muted)">· ${esc(c.date||"")} ${esc(c.generated_at||"")}</span></h2>
+    <div class="grid" style="margin-bottom:6px">
+      <div class="scard green"><div class="k">신입</div><div class="v">${n}<small>명</small></div></div>
+      <div class="scard red"><div class="k">퇴원</div><div class="v">${w}<small>명</small></div></div>
+    </div>
+    <div class="grid"><div class="scard warn"><div class="k">정보변경</div><div class="v">${ch}<small>건</small></div></div>
+      <div class="scard"><div class="k">새 엑셀</div><div class="v" style="font-size:14px;padding-top:8px">${c.excel_generated?esc(c.excel_generated):"없음"}</div></div></div>`;
+  let body = "";
+  if(c.changes && c.changes.length){
+    body = `<div class="card" style="margin-top:12px">` + c.changes.map(x=>`<div class="row"><div><div class="nm">${esc(x.name)}</div><div class="sub">${esc(x.detail||"")}</div></div><div class="right"><span class="pill ${x.kind==='new'?'g':x.kind==='withdrawn'?'r':'o'}">${esc(x.label||x.kind)}</span></div></div>`).join("") + `</div>`;
+  } else {
+    body = `<div class="empty" style="margin-top:16px">✅ 통통통과 엑셀이 일치합니다.<br>변경 사항이 없습니다.</div>`;
+  }
+  return head+body;
+}
+
+async function triggerReq(type, btn){
+  const token = localStorage.getItem("gh_write_token");
+  if(!token){ toast("먼저 ⚙에서 토큰을 설정하세요"); openSettings(); return; }
+  if(btn){ btn.disabled=true; btn.textContent="요청 중…"; }
+  const ts = Date.now();
+  const path = `requests/req-${ts}.json`;
+  const body = JSON.stringify({ type, requested_at:new Date().toISOString() }, null, 2);
+  const content = btoa(unescape(encodeURIComponent(body)));
+  try{
+    const r = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+      method:"PUT", headers:{ "Authorization":"token "+token, "Accept":"application/vnd.github.v3+json" },
+      body: JSON.stringify({ message:`request ${type}`, content })
+    });
+    if(r.ok){ toast("요청 접수 · PC가 곧 실행합니다"); }
+    else { const e=await r.json(); toast("요청 실패: "+(e.message||r.status)); }
+  }catch(e){ toast("네트워크 오류"); }
+  if(btn){ setTimeout(()=>{ btn.disabled=false; render(); },1400); }
+}
+
+function openSettings(){
+  const cur = localStorage.getItem("gh_write_token")||"";
+  showModalHTML("⚙ 설정", `
+    <label class="lb">GitHub 쓰기 토큰 (수동 버튼용)</label>
+    <input id="tokInput" type="password" placeholder="ghp_... 또는 github_pat_..." value="${esc(cur)}">
+    <div class="hint">이 토큰은 <b>이 기기에만</b> 저장되며(localStorage) 저장소 소스에는 들어가지 않습니다.
+      subnap-check 저장소 <b>contents 쓰기 전용</b> 파인그레인드 토큰을 권장합니다. 수동 버튼(수납 재발행·통통통 연동)에만 쓰입니다.</div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-outline" onclick="closeModal()">닫기</button>
+      <button class="btn btn-primary" onclick="saveToken()">저장</button>
+    </div>`);
+}
+function saveToken(){ const v=$("tokInput").value.trim(); if(v) localStorage.setItem("gh_write_token",v); else localStorage.removeItem("gh_write_token"); toast("저장됨"); closeModal(); }
+
+function showModal(title, bodyText, buttons){
+  const btns = buttons.map((b,i)=>`<button class="btn ${b.cls}" style="flex:1" onclick="__mb(${i})">${b.t}</button>`).join("");
+  window.__mbtns = buttons;
+  $("modalRoot").innerHTML = `<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+    <button class="close" onclick="closeModal()">✕</button><h3>${esc(title)}</h3>
+    <div class="mbody">${esc(bodyText)}</div><div class="btn-row">${btns}</div></div></div>`;
+}
+function showModalHTML(title, html){
+  $("modalRoot").innerHTML = `<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+    <button class="close" onclick="closeModal()">✕</button><h3>${esc(title)}</h3>${html}</div></div>`;
+}
+function __mb(i){ window.__mbtns[i].fn(); }
+function closeModal(){ $("modalRoot").innerHTML=""; }
+
+function errBox(f){ return `<div class="empty">⚠️ ${esc(f)} 를 불러올 수 없습니다.<br><span style="font-size:12px">아직 생성되지 않았을 수 있습니다.</span></div>`; }
+
+(async function(){
+  const d=new Date();
+  $("hDate").textContent = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  await loadAll();
+  if(DB.students) $("hUpd").textContent = "명단 "+(DB.students.updated_at||"");
+  render();
+})();
 </script>
 </body>
 </html>

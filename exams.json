@@ -1,0 +1,151 @@
+{
+  "updated_at": "2026-07-16 18:26",
+  "targets": [
+    {
+      "school": "대전대성중학교",
+      "grade": "중2",
+      "students": [
+        "김승현"
+      ]
+    },
+    {
+      "school": "대전동산고등학교",
+      "grade": "고1",
+      "students": [
+        "박시후"
+      ]
+    },
+    {
+      "school": "대전성모여자고등학교",
+      "grade": "고2",
+      "students": [
+        "박서연"
+      ]
+    },
+    {
+      "school": "대전여자고등학교",
+      "grade": "고2",
+      "students": [
+        "박주현"
+      ]
+    },
+    {
+      "school": "대전태평중학교",
+      "grade": "중2",
+      "students": [
+        "윤민선"
+      ]
+    },
+    {
+      "school": "동산고등학교",
+      "grade": "고3",
+      "students": [
+        "지효환"
+      ]
+    },
+    {
+      "school": "보문고등학교",
+      "grade": "고3",
+      "students": [
+        "최은수"
+      ]
+    },
+    {
+      "school": "중앙중학교",
+      "grade": "고2",
+      "students": [
+        "황요한"
+      ]
+    },
+    {
+      "school": "충남여자중학교",
+      "grade": "중1",
+      "students": [
+        "이주은"
+      ]
+    },
+    {
+      "school": "충남여자중학교",
+      "grade": "중3",
+      "students": [
+        "박소은"
+      ]
+    },
+    {
+      "school": "호수돈여자고등학교",
+      "grade": "고1",
+      "students": [
+        "김효민"
+      ]
+    },
+    {
+      "school": "호수돈여자고등학교",
+      "grade": "고2",
+      "students": [
+        "박다연",
+        "박지호",
+        "방채원",
+        "최아정"
+      ]
+    },
+    {
+      "school": "호수돈여자고등학교",
+      "grade": "고3",
+      "students": [
+        "강지민"
+      ]
+    },
+    {
+      "school": "호수돈여자중학교",
+      "grade": "중1",
+      "students": [
+        "박서아"
+      ]
+    },
+    {
+      "school": "호수돈여자중학교",
+      "grade": "중2",
+      "students": [
+        "윤소은",
+        "이서윤"
+      ]
+    },
+    {
+      "school": "호수돈여자중학교",
+      "grade": "중3",
+      "students": [
+        "서예영",
+        "최시은",
+        "황온유"
+      ]
+    }
+  ],
+  "exam_periods": [],
+  "national": [
+    {
+      "name": "9월 평가원 모의평가",
+      "date": "",
+      "targetGrades": [
+        "고3"
+      ],
+      "note": "날짜 확인 후 입력"
+    },
+    {
+      "name": "10월 교육청 학력평가",
+      "date": "",
+      "targetGrades": [
+        "고3"
+      ],
+      "note": "날짜 확인 후 입력"
+    },
+    {
+      "name": "2027학년도 수능",
+      "date": "",
+      "targetGrades": [
+        "고3"
+      ],
+      "note": "날짜 확인 후 입력"
+    }
+  ],
+  "student_overrides": {}
+}
