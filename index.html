@@ -192,7 +192,11 @@ function renderHome(){
       chg.changes.slice(0,5).map(c=>`<div class="row"><div class="nm">${esc(c.name)}</div><div class="right"><span class="pill ${c.kind==='new'?'g':c.kind==='withdrawn'?'r':'o'}">${esc(c.label||c.kind)}</span></div></div>`).join("") + `</div>`;
   }
   return `<h2 class="sec"><span class="dot"></span>오늘 요약</h2>${cards}${exPrev}${chPrev}
-    <div style="margin-top:18px"><button class="btn btn-nav" style="width:100%" onclick="go('pay')">💰 수납체크 열기</button></div>`;
+    <div class="btn-row" style="margin-top:18px">
+      <button class="btn btn-primary" onclick="triggerReq('full_sync',this)">🔄 전체 동기화</button>
+      <button class="btn btn-nav" onclick="go('pay')">💰 수납체크 열기</button>
+    </div>
+    <div class="hint" style="margin:8px 2px 0">전체 동기화: 수납·명단·대조·시험을 PC가 새로 생성해 반영합니다(1~2분 소요, 최초 1회 ⚙ 토큰 필요).</div>`;
 }
 
 function renderRoster(){
