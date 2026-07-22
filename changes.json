@@ -1,17 +1,19 @@
 {
   "date": "2026-07-22",
-  "generated_at": "17:57",
+  "generated_at": "18:05",
   "summary": {
     "new": 0,
-    "withdrawn": 0,
+    "withdrawn": 1,
     "changed": 0
   },
-  "changes": [],
-  "excel_mismatch": [
+  "changes": [
     {
       "name": "황요한",
-      "detail": "통통통 재원생인데 엑셀 명단에 없음"
+      "kind": "withdrawn",
+      "label": "퇴원",
+      "detail": "고2 중앙중학교"
     }
   ],
+  "excel_mismatch": [],
   "excel_generated": null
 }
