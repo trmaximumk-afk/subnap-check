@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-07-22 17:57",
-  "count": 22,
+  "updated_at": "2026-07-22 18:05",
+  "count": 21,
   "students": [
     {
       "name": "박서아",
@@ -216,18 +216,6 @@
       "phone": "01034108062",
       "regDate": "20250203",
       "encNo": "495a524f59324f65566b677555644b6a7157326266413d3d",
-      "teacher": null
-    },
-    {
-      "name": "황요한",
-      "grade": "고2",
-      "school": "중앙중학교",
-      "cls": "1:3중등수학",
-      "mother": "01072002867",
-      "father": null,
-      "phone": "01072002867",
-      "regDate": "20240122",
-      "encNo": "75354e4d514a554d5a416e71734f54486e7542366a513d3d",
       "teacher": null
     },
     {
