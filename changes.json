@@ -1,12 +1,17 @@
 {
   "date": "2026-07-22",
-  "generated_at": "17:47",
+  "generated_at": "17:57",
   "summary": {
     "new": 0,
     "withdrawn": 0,
     "changed": 0
   },
   "changes": [],
-  "excel_mismatch": [],
+  "excel_mismatch": [
+    {
+      "name": "황요한",
+      "detail": "통통통 재원생인데 엑셀 명단에 없음"
+    }
+  ],
   "excel_generated": null
 }
