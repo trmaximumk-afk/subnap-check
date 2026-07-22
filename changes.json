@@ -1,19 +1,12 @@
 {
-  "date": "2026-07-22",
-  "generated_at": "18:05",
+  "date": "2026-07-23",
+  "generated_at": "05:00",
   "summary": {
     "new": 0,
-    "withdrawn": 1,
+    "withdrawn": 0,
     "changed": 0
   },
-  "changes": [
-    {
-      "name": "황요한",
-      "kind": "withdrawn",
-      "label": "퇴원",
-      "detail": "고2 중앙중학교"
-    }
-  ],
+  "changes": [],
   "excel_mismatch": [],
   "excel_generated": null
 }
