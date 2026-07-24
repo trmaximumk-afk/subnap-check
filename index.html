@@ -115,7 +115,7 @@
 
 <script>
 const REPO = "trmaximumk-afk/subnap-check";
-const FILES = { payment:"data.json", students:"students.json", exams:"exams.json", changes:"changes.json", timetable:"timetable.json" };
+const FILES = { payment:"data.json", students:"students.json", exams:"exams.json", changes:"changes.json", timetable:"timetable.json", alerts:"alerts.json" };
 const TABS = [
   { id:"home",   ic:"🏠", lb:"홈" },
   { id:"roster", ic:"👥", lb:"현황" },
@@ -191,7 +191,16 @@ function renderHome(){
     chPrev = `<h2 class="sec"><span class="dot"></span>오늘 명단 변경</h2><div class="card">` +
       chg.changes.slice(0,5).map(c=>`<div class="row"><div class="nm">${esc(c.name)}</div><div class="right"><span class="pill ${c.kind==='new'?'g':c.kind==='withdrawn'?'r':'o'}">${esc(c.label||c.kind)}</span></div></div>`).join("") + `</div>`;
   }
-  return `<h2 class="sec"><span class="dot"></span>오늘 요약</h2>${cards}${exPrev}${chPrev}
+  // 세특검색기 상담·피드백 신청 알림 (alerts.json — PC 폴링 엔진이 1분마다 갱신)
+  const al = DB.alerts;
+  const alN = al ? ((al.consult_pending||0)+(al.feedback_pending||0)) : 0;
+  let alPrev = "";
+  if(alN>0){
+    alPrev = `<h2 class="sec"><span class="dot"></span>🔔 세특검색기 신청 대기 <span class="pill r" style="margin-left:6px">${alN}건</span></h2><div class="card">` +
+      (al.items||[]).slice(0,6).map(i=>`<div class="row"><div class="nm">${esc(i.name)} <small style="color:#8a8f98;font-weight:400">${esc(i.topic||"")}</small></div><div class="right"><span class="pill ${i.kind==='consult'?'o':'g'}">${i.kind==='consult'?'상담':'피드백'}</span><small style="margin-left:6px;color:#8a8f98">${esc(i.at||"")}</small></div></div>`).join("") +
+      `</div><div class="btn-row" style="margin-top:8px"><button class="btn btn-primary" onclick="window.open('https://setech-search-x85r.vercel.app/admin','_blank')">🔗 세특검색기 관리자에서 처리</button></div>`;
+  }
+  return `${alPrev}<h2 class="sec"><span class="dot"></span>오늘 요약</h2>${cards}${exPrev}${chPrev}
     <div class="btn-row" style="margin-top:18px">
       <button class="btn btn-primary" onclick="triggerReq('full_sync',this)">🔄 전체 동기화</button>
       <button class="btn btn-nav" onclick="go('pay')">💰 수납체크 열기</button>
