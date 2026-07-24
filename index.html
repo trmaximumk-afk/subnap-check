@@ -637,9 +637,7 @@ function vocative(full){
 function openMakeupMsg(id){
   const it = ((DB.schedule||{}).makeups||[]).find(x=>x.id===id);
   if(!it){ toast("보강 일정을 찾을 수 없습니다"); return; }
-  const d = daysUntil(it.date);
-  const lead = d===1?"내일 보강 있는 거 잊지 않았지?":(d===0?"오늘 보강 있는 날이에요!":"보강 일정 알려줄게~");
-  const msg = `${vocative(it.student)}~ 프라임K수학이에요 😊\n${lead}\n\n📅 ${fmtKoreanDT(it.date,it.time,true)}\n${it.memo?`📌 ${it.memo}\n`:""}\n시간 맞춰서 와요~\n혹시 사정 생기면 미리 꼭 연락 주기! 💪`;
+  const msg = `${vocative(it.student)}~ 프라임K수학이에요 😊\n내일 보강 있는 거 알고 있지? 한 번 더 체크!\n\n📅 ${fmtKoreanDT(it.date,it.time,true)}\n${it.memo?`📌 ${it.memo}\n`:""}\n내일 시간 맞춰서 보자~\n혹시 사정 생기면 미리 꼭 연락 줘! 💪`;
   showModalHTML("💬 보강 안내 메시지", `
     <label class="lb">메시지 <span style="font-weight:400;font-size:11px;color:var(--muted)">(수정 가능)</span></label>
     <textarea id="mmPreview" style="height:200px;font-size:13.5px;line-height:1.6">${esc(msg)}</textarea>
