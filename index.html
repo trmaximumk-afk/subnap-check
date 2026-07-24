@@ -458,10 +458,12 @@ function schedRow(x, editable){
   const cls = (x.d==null||past) ? "done" : (x.d===0?"near":(x.d<=2?"soon":"far"));
   const txt = x.d==null ? "—" : (past?`+${-x.d}`:(x.d===0?"오늘":(x.d===1?"내일":`D-${x.d}`)));
   const tel = x.phone ? ` · <a href="tel:${(""+x.phone).replace(/\D/g,"")}" style="color:var(--gold);font-weight:700;text-decoration:none">${esc(fmtPhone(x.phone))}</a>` : "";
-  const del = editable ? `<button onclick="schedDelete('${esc(x.id)}')" style="margin-left:auto;width:32px;height:32px;border:none;border-radius:8px;background:#f1ece0;color:#a09a8a;font-size:14px;cursor:pointer;flex-shrink:0">✕</button>` : "";
+  const msgBtn = editable ? `<button onclick="${x.kind==="consult"?"openConsultMsg":"openMakeupMsg"}('${esc(x.id)}')" title="안내문자" style="width:32px;height:32px;border:none;border-radius:8px;background:#fdf1e9;color:#e07b4c;font-size:14px;cursor:pointer;flex-shrink:0">💬</button>` : "";
+  const del = editable ? `<button onclick="schedDelete('${esc(x.id)}')" style="width:32px;height:32px;border:none;border-radius:8px;background:#f1ece0;color:#a09a8a;font-size:14px;cursor:pointer;flex-shrink:0">✕</button>` : "";
+  const btns = editable ? `<div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-shrink:0">${msgBtn}${del}</div>` : "";
   return `<div class="dday"><div class="dbadge ${cls}">${txt}</div>
     <div style="min-width:0"><div class="nm">${esc(schedTitle(x))} ${schedPill(x)}</div>
-    <div class="sub">${esc(x.date||"")}${x.time?" "+esc(x.time):""}${tel}${x.memo?` · ${esc(x.memo)}`:""}</div></div>${del}</div>`;
+    <div class="sub">${esc(x.date||"")}${x.time?" "+esc(x.time):""}${tel}${x.memo?` · ${esc(x.memo)}`:""}</div></div>${btns}</div>`;
 }
 function renderSched(){
   const items = schedItems();
@@ -486,6 +488,8 @@ function renderSched(){
     <input id="csName" placeholder="학생 또는 학부모 이름">
     <label class="lb">연락처 <span style="font-weight:400;font-size:11px;color:var(--muted)">(선택)</span></label>
     <input id="csPhone" type="tel" placeholder="010-0000-0000">
+    <label class="lb">입시내비 아이디 <span style="font-weight:400;font-size:11px;color:var(--muted)">(안내문자용 · 비번은 1111 고정)</span></label>
+    <input id="csNavi" placeholder="예: 맥시멈34">
     <label class="lb">날짜 · 시간</label>
     <div style="display:flex;gap:8px"><input type="date" id="csDate" style="flex:1"><input type="time" id="csTime" style="width:128px"></div>
     <label class="lb">메모 <span style="font-weight:400;font-size:11px;color:var(--muted)">(선택)</span></label>
@@ -537,6 +541,7 @@ async function addConsult(btn){
   if(!name){ toast("이름을 입력하세요"); return; }
   if(!date){ toast("날짜를 선택하세요"); return; }
   const item = { id:"c"+Date.now(), category:$("csCat").value, name, phone:$("csPhone").value.trim(),
+                 navi:$("csNavi").value.trim(),
                  date, time:$("csTime").value, memo:$("csMemo").value.trim(), created_at:new Date().toISOString() };
   await schedMutate(`상담예약 ${name} ${date}`, d=>{ d.consults.push(item); }, btn, "💾 상담예약 저장");
 }
@@ -553,6 +558,87 @@ async function schedDelete(id){
     d.consults = d.consults.filter(x=>x.id!==id);
     d.makeups  = d.makeups.filter(x=>x.id!==id);
   });
+}
+
+/* ── 컨설팅 예약 안내문자 (생기부 이미지 첨부) ── */
+const NAVI_POST = "https://blog.naver.com/maximumk1010/223926080774";
+const GUIDE_IMG = "assets/record-guide.jpg";
+let cmManual = false;
+function fmtKoreanDT(date, time, withWd){
+  const p = (""+(date||"")).split("-").map(Number);
+  if(p.length<3) return date||"";
+  let s = `${p[1]}월${p[2]}일`;
+  if(withWd){ const WD=["일","월","화","수","목","금","토"]; s += `(${WD[new Date(p[0],p[1]-1,p[2]).getDay()]})`; }
+  if(time){ const t=(""+time).split(":").map(Number); const ap=t[0]<12?"오전":"오후"; const hh=t[0]%12===0?12:t[0]%12; s += ` ${ap} ${hh}시${t[1]?` ${t[1]}분`:""}`; }
+  return s;
+}
+function consultMsgBuild(){
+  const it = window.__cmItem||{};
+  const navi = $("cmNavi").value.trim() || "맥시멈○○";
+  const fee = $("cmFee").value.trim() || "35";
+  if(it.id) localStorage.setItem("navi_"+it.id, $("cmNavi").value.trim());
+  return `날짜 ${fmtKoreanDT(it.date,it.time)}\n시간 60~90분 소요예정\n금액 ${fee}\n\n준비할것\n1. 프로그램 입력\n${it.name||""} (아이디:${navi} / 비번: 1111)\n\n아이디는 한글로 '맥시멈'이라고 입력하면 됩니다.\n\n아래 링크는 접속 방법 포스팅이에요\n${NAVI_POST}\n\n#포스팅 꼭 보시고 입시내비에 입력해주셔야 상담이 진행됩니다#\n\n2. 생기부발급 안내는 같이보내드린 이미지 참고하세요.\n\n## 절대 저에게 파일로 보내지마시고##\n\n당일에 출력해서 가져와주세요\n\n3. 희망 학교 및 학과 혹은 진로는 문자로 부탁드려요.`;
+}
+function cmRefresh(){ if(!cmManual) $("cmPreview").value = consultMsgBuild(); }
+function openConsultMsg(id){
+  const it = ((DB.schedule||{}).consults||[]).find(x=>x.id===id);
+  if(!it){ toast("예약을 찾을 수 없습니다"); return; }
+  window.__cmItem = it; cmManual = false;
+  const navi = localStorage.getItem("navi_"+id) || it.navi || "";
+  showModalHTML("💬 컨설팅 예약 안내문자", `
+    <label class="lb">입시내비 아이디 <span style="font-weight:400;font-size:11px;color:var(--muted)">(비번은 1111 고정)</span></label>
+    <input id="cmNavi" value="${esc(navi)}" placeholder="예: 맥시멈34" oninput="cmRefresh()">
+    <label class="lb">금액</label>
+    <input id="cmFee" value="35" inputmode="numeric" oninput="cmRefresh()">
+    <label class="lb">문자 미리보기 <span style="font-weight:400;font-size:11px;color:var(--muted)">(수정 가능)</span></label>
+    <textarea id="cmPreview" style="height:190px;font-size:13px;line-height:1.55" oninput="cmManual=true"></textarea>
+    <img src="${GUIDE_IMG}" style="width:100%;border-radius:10px;margin-top:10px;border:1px solid var(--line)">
+    <div class="hint">생기부 발급 안내 이미지 — [이미지+문자 공유]에서 문자앱을 고르면 이미지가 첨부되고, 문자 내용은 자동 복사되어 붙여넣기만 하면 됩니다.</div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn btn-primary" onclick="cmShare()">🖼 이미지+문자 공유</button>
+    </div>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn btn-outline" onclick="cmCopy()">📋 복사</button>
+      <button class="btn btn-nav" onclick="cmSms()">💬 복사+문자앱</button>
+    </div>`);
+  cmRefresh();
+}
+async function cmShare(){
+  const msg = $("cmPreview").value;
+  await copy(msg);
+  try{
+    const r = await fetch(GUIDE_IMG); const b = await r.blob();
+    const f = new File([b], "생기부발급안내.jpg", { type:"image/jpeg" });
+    if(navigator.canShare && navigator.canShare({files:[f]})){
+      await navigator.share({ files:[f], text:msg });
+      toast("문자 내용도 복사됨 — 필요시 붙여넣기");
+    }else{
+      const a = document.createElement("a"); a.href = GUIDE_IMG; a.download = "생기부발급안내.jpg"; a.click();
+      toast("이미지 저장 + 문자 복사됨 — 문자앱에서 첨부하세요");
+    }
+  }catch(e){ if(e && e.name!=="AbortError") toast("공유 실패 — 문자는 복사돼 있습니다"); }
+}
+function cmCopy(){ copy($("cmPreview").value); toast("복사 완료"); }
+async function cmSms(){
+  const it = window.__cmItem||{};
+  await copy($("cmPreview").value);
+  toast("복사 → 문자앱");
+  setTimeout(()=>location.href="sms:"+(""+(it.phone||"")).replace(/\D/g,""),250);
+}
+
+/* ── 보강 안내 메시지 (학생 개별 카톡용 · 복사 전용) ── */
+function openMakeupMsg(id){
+  const it = ((DB.schedule||{}).makeups||[]).find(x=>x.id===id);
+  if(!it){ toast("보강 일정을 찾을 수 없습니다"); return; }
+  const d = daysUntil(it.date);
+  const lead = d===1?"내일 ":(d===0?"오늘 ":"");
+  const msg = `[프라임K수학 보강 안내]\n${it.student} 학생, ${lead}보강 일정 안내드립니다.\n\n📅 ${fmtKoreanDT(it.date,it.time,true)}\n${it.memo?`📌 ${it.memo}\n`:""}\n시간 맞춰 와주세요!\n일정 변경이 필요하면 미리 연락 주세요 😊`;
+  showModalHTML("💬 보강 안내 메시지", `
+    <label class="lb">메시지 <span style="font-weight:400;font-size:11px;color:var(--muted)">(수정 가능 · 복사해서 카톡으로 보내세요)</span></label>
+    <textarea id="mmPreview" style="height:200px;font-size:13.5px;line-height:1.6">${esc(msg)}</textarea>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn btn-primary" onclick="copy($('mmPreview').value).then(()=>{toast('복사 완료 — 카톡에 붙여넣으세요');closeModal()})">📋 복사</button>
+    </div>`);
 }
 
 function renderDiff(){
