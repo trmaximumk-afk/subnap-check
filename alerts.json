@@ -1,6 +1,13 @@
 {
  "consult_pending": 0,
- "feedback_pending": 0,
- "items": [],
- "generated_at": "2026-07-24T21:21:03"
+ "feedback_pending": 1,
+ "items": [
+  {
+   "kind": "feedback",
+   "topic": "E2E 알림 테스트 주제",
+   "name": "테스트",
+   "at": "07/24 03:21"
+  }
+ ],
+ "generated_at": "2026-07-24T21:22:03"
 }
