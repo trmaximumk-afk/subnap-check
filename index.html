@@ -593,7 +593,7 @@ function openConsultMsg(id){
     <label class="lb">문자 미리보기 <span style="font-weight:400;font-size:11px;color:var(--muted)">(수정 가능)</span></label>
     <textarea id="cmPreview" style="height:190px;font-size:13px;line-height:1.55" oninput="cmManual=true"></textarea>
     <img src="${GUIDE_IMG}" style="width:100%;border-radius:10px;margin-top:10px;border:1px solid var(--line)">
-    <div class="hint">버튼을 누르면 공유창이 뜹니다 → <b>'메시지'앱 선택</b> → 생기부 이미지와 문자 내용이 함께 들어갑니다. 받는 사람 선택 후 전송하세요. (혹시 문자 내용이 비면 붙여넣기 — 자동 복사돼 있습니다)</div>
+    <div class="hint">${it.phone?`받는 사람: <b style="color:var(--navy);font-size:13px">${esc(fmtPhone(it.phone))}</b><br>`:""}버튼을 누르면 공유창이 뜹니다 → 공유창 상단에 <b>최근 문자 대화 상대</b>가 있으면 바로 선택(이미지+문자 한번에 전송), 없으면 '메시지'앱 선택 후 위 번호로 보내세요. (문자 내용이 비면 붙여넣기 — 자동 복사돼 있습니다)</div>
     <div class="btn-row" style="margin-top:12px">
       <button class="btn btn-primary" onclick="cmSendAll()">📨 이미지+문자 한번에 문자앱으로</button>
     </div>
