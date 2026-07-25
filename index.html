@@ -181,7 +181,7 @@ function renderHome(){
   const nxSub = nx ? `${nx.school} ${nx.grade}` : "예정 없음";
   let cards = `
     <div class="grid">
-      <div class="scard"><div class="k">재원생</div><div class="v">${cnt}<small>명</small></div></div>
+      <div class="scard"><div class="k">재원생</div><div class="v">${cnt}<small>명</small></div>${(stu&&stu.pending&&stu.pending.length)?`<div class="k" style="margin:4px 0 0;color:#22a06b">＋${stu.pending.length}명 등록예정</div>`:""}</div>
       <div class="scard ${unpaid?'red':'green'}"><div class="k">미납 안내 대상</div><div class="v">${unpaid}<small>건</small></div></div>
       <div class="scard ${chgN?'warn':''}"><div class="k">오늘 명단 변경</div><div class="v">${chgN}<small>건</small></div></div>
       <div class="scard"><div class="k">임박 시험</div><div class="v" style="font-size:22px">${nxTxt}</div><div class="k" style="margin:4px 0 0">${esc(nxSub)}</div></div>
@@ -228,6 +228,17 @@ function renderRoster(){
     });
     html += `</div>`;
   });
+  const pend = stu.pending||[];
+  if(pend.length){
+    html += `<div class="grade-h" style="color:#22a06b">등록예정 (${pend.length})</div><div class="card">`;
+    pend.forEach(s=>{
+      const rd = (""+(s.regDate||"")); const rdTxt = rd.length===8 ? `${+rd.slice(4,6)}/${+rd.slice(6,8)} 등록` : "예정";
+      html += `<div class="row"><div class="avatar" style="background:linear-gradient(135deg,#22a06b22,#22a06b44);color:#22a06b">${esc((s.name||"").charAt(0))}</div>
+        <div><div class="nm">${esc(s.name)}</div><div class="sub">${esc(s.school||"학교미입력")} · ${esc(s.grade||"-")}</div></div>
+        <div class="right"><span class="pill g">${esc(rdTxt)}</span>${ s.phone?`<div style="margin-top:3px"><a href="tel:${s.phone}" style="color:var(--gold);font-weight:700;text-decoration:none">${fmtPhone(s.phone)}</a></div>`:"" }</div></div>`;
+    });
+    html += `</div>`;
+  }
   return html;
 }
 
