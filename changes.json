@@ -1,12 +1,17 @@
 {
   "date": "2026-07-25",
-  "generated_at": "09:23",
+  "generated_at": "11:51",
   "summary": {
     "new": 0,
     "withdrawn": 0,
     "changed": 0
   },
   "changes": [],
-  "excel_mismatch": [],
+  "excel_mismatch": [
+    {
+      "name": "손채영",
+      "detail": "엑셀 명단인데 통통통 재원생 아님"
+    }
+  ],
   "excel_generated": null
 }
