@@ -1,17 +1,28 @@
 {
-  "date": "2026-07-26",
+  "date": "2026-07-27",
   "generated_at": "05:00",
   "summary": {
-    "new": 0,
+    "new": 1,
     "withdrawn": 0,
     "changed": 0
   },
-  "changes": [],
+  "changes": [
+    {
+      "name": "이현진",
+      "kind": "new",
+      "label": "신입",
+      "detail": "중3 호수돈여자중학교"
+    }
+  ],
   "excel_mismatch": [
+    {
+      "name": "이현진",
+      "detail": "통통통 재원생인데 엑셀 명단에 없음"
+    },
     {
       "name": "손채영",
       "detail": "엑셀 명단인데 통통통 재원생 아님"
     }
   ],
-  "excel_generated": null
+  "excel_generated": "프라임K수학_시간표학생배치_최신_20260727.xlsx"
 }
