@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-07-27 05:00",
-  "count": 22,
+  "updated_at": "2026-07-28 05:00",
+  "count": 23,
   "students": [
     {
       "name": "박서아",
@@ -159,6 +159,18 @@
       "teacher": null
     },
     {
+      "name": "손채영",
+      "grade": "고1",
+      "school": "호수돈여자고등학교",
+      "cls": "1:2고등수학",
+      "mother": "01030643562",
+      "father": null,
+      "phone": "01030643562",
+      "regDate": "20260728",
+      "encNo": "4b66315131704c47334d75664f447632722b427264773d3d",
+      "teacher": null
+    },
+    {
       "name": "박다연",
       "grade": "고2",
       "school": "호수돈여자고등학교",
@@ -267,18 +279,5 @@
       "teacher": null
     }
   ],
-  "pending": [
-    {
-      "name": "손채영",
-      "grade": "고1",
-      "school": "호수돈여자고등학교",
-      "cls": "1:2고등수학",
-      "mother": "01030643562",
-      "father": null,
-      "phone": "01030643562",
-      "regDate": "20260728",
-      "encNo": "4b66315131704c47334d75664f447632722b427264773d3d",
-      "teacher": null
-    }
-  ]
+  "pending": []
 }
