@@ -1,24 +1,12 @@
 {
-  "date": "2026-08-03",
-  "generated_at": "10:30",
+  "date": "2026-08-04",
+  "generated_at": "05:00",
   "summary": {
-    "new": 1,
+    "new": 0,
     "withdrawn": 0,
     "changed": 0
   },
-  "changes": [
-    {
-      "name": "공주원",
-      "kind": "new",
-      "label": "신입",
-      "detail": "중3 보문중학교"
-    }
-  ],
-  "excel_mismatch": [
-    {
-      "name": "공주원",
-      "detail": "통통통 재원생인데 엑셀 명단에 없음"
-    }
-  ],
+  "changes": [],
+  "excel_mismatch": [],
   "excel_generated": null
 }
