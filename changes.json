@@ -1,12 +1,19 @@
 {
-  "date": "2026-08-08",
+  "date": "2026-08-09",
   "generated_at": "05:00",
   "summary": {
     "new": 0,
-    "withdrawn": 0,
+    "withdrawn": 1,
     "changed": 0
   },
-  "changes": [],
+  "changes": [
+    {
+      "name": "박주현",
+      "kind": "withdrawn",
+      "label": "퇴원",
+      "detail": "고2 대전여자고등학교"
+    }
+  ],
   "excel_mismatch": [],
-  "excel_generated": null
+  "excel_generated": "프라임K수학_시간표학생배치_최신_20260809.xlsx"
 }
