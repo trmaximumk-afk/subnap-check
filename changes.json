@@ -1,19 +1,12 @@
 {
-  "date": "2026-08-12",
+  "date": "2026-08-13",
   "generated_at": "05:00",
   "summary": {
     "new": 0,
-    "withdrawn": 1,
+    "withdrawn": 0,
     "changed": 0
   },
-  "changes": [
-    {
-      "name": "김승현",
-      "kind": "withdrawn",
-      "label": "퇴원",
-      "detail": "중2 대전대성중학교"
-    }
-  ],
+  "changes": [],
   "excel_mismatch": [],
-  "excel_generated": "프라임K수학_시간표학생배치_최신_20260812.xlsx"
+  "excel_generated": null
 }
