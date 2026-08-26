@@ -115,7 +115,7 @@
 
 <script>
 const REPO = "trmaximumk-afk/subnap-check";
-const FILES = { payment:"data.json", students:"students.json", exams:"exams.json", changes:"changes.json", timetable:"timetable.json", alerts:"alerts.json", schedule:"schedule.json" };
+const FILES = { payment:"data.json", students:"students.json", exams:"exams.json", changes:"changes.json", timetable:"timetable.json", alerts:"alerts.json", schedule:"schedule.json", notice:"notice.json" };
 const TABS = [
   { id:"home",   ic:"🏠", lb:"홈" },
   { id:"roster", ic:"👥", lb:"현황" },
@@ -153,6 +153,7 @@ function render(){
   $("view").innerHTML = (map[tab]||renderHome)();
   if(tab==="book") initBook();
   if(tab==="exam" && $("exMaths") && !$("exMaths").children.length) addMathRow();
+  if(tab==="exam" && $("ntPrev1")) ntRefresh();
   window.scrollTo(0,0);
 }
 function go(t){ tab=t; render(); }
@@ -357,7 +358,7 @@ function renderExam(){
   const dds = computeDdays().filter(x=>x.d==null||x.d>=-3).sort((a,b)=>(a.d==null?9999:a.d)-(b.d==null?9999:b.d));
   let head = `<h2 class="sec"><span class="dot"></span>시험 D-day</h2>`;
   let ddHtml = dds.length ? dds.map(ddayRow).join("") : `<div class="empty">등록된 시험이 없습니다.<br>아래에서 학교·학년을 골라 등록하세요.</div>`;
-  return head + ddHtml + examForm() + examTargetList();
+  return head + ddHtml + examForm() + examTargetList() + noticeSection();
 }
 function examForm(){
   const ex = DB.exams;
@@ -652,6 +653,108 @@ async function mmShare(){
   }
   await copy(msg);
   toast("이 브라우저는 공유 미지원 — 복사했어요, 카톡에 붙여넣으세요");
+}
+
+/* ── 시험기간 알림 (prime-k-notice 페이지 제어 + 문자·카톡 문안) ── */
+const NOTICE_BASE = "https://trmaximumk-afk.github.io/prime-k-notice/";
+const NOTICE_TIMES = [ {id:"1900",lb:"1타임 19:00"}, {id:"1950",lb:"2타임 19:50"}, {id:"2040",lb:"3타임 20:40"}, {id:"2130",lb:"4타임 21:30"} ];
+let ntManual1=false, ntManual2=false;
+function ntCfg(){ const n=DB.notice||{}; return { season:n.season||"", timetable:n.timetable||{}, consult:Object.assign({days:[],holiday:""}, n.consult||{}) }; }
+function fmtMDW(ymd){ const p=(""+(ymd||"")).split("-").map(Number); if(p.length<3||p.some(isNaN)) return ""; const WD=["일","월","화","수","목","금","토"]; return `${p[1]}월 ${p[2]}일(${WD[new Date(p[0],p[1]-1,p[2]).getDay()]})`; }
+function noticeSection(){
+  const n = ntCfg();
+  const dayRows = [0,1,2].map(i=>{
+    const d = (n.consult.days||[])[i] || {date:"",times:["1900","1950","2040","2130"]};
+    const cbs = NOTICE_TIMES.map(t=>`<label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)"><input type="checkbox" class="ntT${i}" value="${t.id}" ${(d.times||[]).includes(t.id)?"checked":""} onchange="ntRefresh()">${t.lb}</label>`).join("");
+    return `<div style="background:#f8f8fc;border-radius:9px;padding:8px;margin-bottom:8px">
+      <input type="date" id="ntD${i}" value="${esc(d.date||"")}" onchange="ntRefresh()" style="width:100%">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px">${cbs}</div></div>`;
+  }).join("");
+  return `<h2 class="sec"><span class="dot"></span>📣 시험기간 알림 (문자·카톡 + 페이지 반영)</h2>
+  <div class="card">
+    <label class="lb">시즌명 <span style="font-weight:400;font-size:11px;color:var(--muted)">(두 페이지 공통 배지)</span></label>
+    <input id="ntSeason" value="${esc(n.season)}" placeholder="예: 2026 · 2학기 중간고사" oninput="ntRefresh()">
+    <label class="lb">① 시험 전 — 토요일 시간표 시작일</label>
+    <input type="date" id="ntStart" value="${esc(n.timetable.start||"")}" onchange="ntRefresh()">
+    <label class="lb">문자 미리보기 <span style="font-weight:400;font-size:11px;color:var(--muted)">(수정 가능)</span></label>
+    <textarea id="ntPrev1" style="height:150px;font-size:12.5px;line-height:1.55" oninput="ntManual1=true"></textarea>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn btn-outline" onclick="ntCopy(1)">📋 복사</button>
+      <button class="btn btn-outline" onclick="ntShare(1)">📨 공유(카톡)</button>
+      <button class="btn btn-primary" onclick="ntSave(this)">💾 페이지 반영</button>
+    </div>
+    <div class="hint">반영 후 1~2분 뒤 <a href="${NOTICE_BASE}" target="_blank" style="color:var(--gold)">시간표 안내 페이지</a>의 배지·시작일이 바뀝니다. 교시 시간표 자체는 전광판과 함께 클로드코드로 변경.</div>
+  </div>
+  <div class="card">
+    <label class="lb">② 시험 후 — 1:1 상담 날짜·타임 <span style="font-weight:400;font-size:11px;color:var(--muted)">(빈 날짜는 제외, 자동 정렬)</span></label>
+    ${dayRows}
+    <label class="lb">휴강 안내 <span style="font-weight:400;font-size:11px;color:var(--muted)">(선택 · 문자에만 들어감)</span></label>
+    <input id="ntHoliday" value="${esc(n.consult.holiday||"")}" placeholder="예: 5월 2일(토)은 휴강합니다. 푹 쉬세요~" oninput="ntRefresh()">
+    <label class="lb">문자 미리보기 <span style="font-weight:400;font-size:11px;color:var(--muted)">(수정 가능)</span></label>
+    <textarea id="ntPrev2" style="height:190px;font-size:12.5px;line-height:1.55" oninput="ntManual2=true"></textarea>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn btn-outline" onclick="ntCopy(2)">📋 복사</button>
+      <button class="btn btn-outline" onclick="ntShare(2)">📨 공유(카톡)</button>
+      <button class="btn btn-primary" onclick="ntSave(this)">💾 페이지 반영</button>
+    </div>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn btn-nav" onclick="window.open('${NOTICE_BASE}consult-booking.html','_blank')">🔗 예약 페이지</button>
+      <button class="btn btn-nav" onclick="window.open('${NOTICE_BASE}consult-admin.html','_blank')">🔒 예약 현황(관리자)</button>
+    </div>
+    <div class="hint">반영하면 예약 페이지의 날짜·타임이 바뀝니다(1~2분). 이전 시즌 예약 기록은 그대로 보존됩니다. 저장은 ⚙ 토큰 필요(시험 등록과 동일).</div>
+  </div>`;
+}
+function ntDaysFromForm(){
+  const out=[];
+  [0,1,2].forEach(i=>{
+    const d=$("ntD"+i); if(!d||!d.value) return;
+    const times=[...document.querySelectorAll(".ntT"+i+":checked")].map(c=>c.value);
+    if(!times.length) return;
+    out.push({date:d.value, times});
+  });
+  out.sort((a,b)=>a.date<b.date?-1:1);
+  return out;
+}
+function ntMsg1(){
+  const s=fmtMDW($("ntStart").value);
+  return `프라임K수학입니다 📋\n\n시험기간 토요일 시간표 나왔습니다!\n${s?s+"부터 진행됩니다.\n":""}아래 링크에서 확인해주세요 👇\n\n${NOTICE_BASE}\n\n토요일에 다른 학원 가는 시간 있으면 답장으로 알려주세요!\n(예: OO학원 10:00~12:00)`;
+}
+function ntMsg2(){
+  const days=ntDaysFromForm(); const hol=$("ntHoliday").value.trim();
+  let period=""; if(days.length){ const f=fmtMDW(days[0].date), l=fmtMDW(days[days.length-1].date); period = days.length>1 ? `${f}~${l}` : f; }
+  return `시험 다들 정말 고생 많았어요! 🙌\n\n${hol?hol+"\n\n":""}${period?period+" 저녁에":"저녁에"} 1:1 성적 상담 진행해요!\n\n👇 아래 링크 꼭 들어가서 확인해주세요! 👇\n${NOTICE_BASE}consult-booking.html\n\n· 시간 선착순—먼저 예약하는 사람 이김!\n· 이름 + 시간 클릭만 하면 예약 끝\n\n📚 상담하러 올 때\n「채점된 전과목 시험지」 모두 들고 와주세요.`;
+}
+function ntRefresh(){
+  if(!$("ntPrev1")) return;
+  if(!ntManual1) $("ntPrev1").value=ntMsg1();
+  if(!ntManual2) $("ntPrev2").value=ntMsg2();
+}
+function ntCopy(w){ copy($(w===1?"ntPrev1":"ntPrev2").value); toast("복사 완료 — 문자·카톡에 붙여넣으세요"); }
+async function ntShare(w){
+  const m=$(w===1?"ntPrev1":"ntPrev2").value;
+  if(navigator.share){ try{ await navigator.share({text:m}); return; }catch(e){ if(e&&e.name==="AbortError") return; } }
+  await copy(m); toast("이 브라우저는 공유 미지원 — 복사했어요, 카톡에 붙여넣으세요");
+}
+async function ntSave(btn){
+  const token=localStorage.getItem("gh_write_token");
+  if(!token){ toast("먼저 ⚙에서 토큰을 설정하세요"); openSettings(); return; }
+  const cfg={ season:$("ntSeason").value.trim(), timetable:{ start:$("ntStart").value },
+              consult:{ days:ntDaysFromForm(), holiday:$("ntHoliday").value.trim() },
+              updated_at:new Date().toISOString() };
+  btn.disabled=true; const lb=btn.textContent; btn.textContent="반영 중…";
+  try{
+    let sha;
+    const r=await fetch(`https://api.github.com/repos/${REPO}/contents/notice.json`,{headers:{Authorization:"token "+token,Accept:"application/vnd.github.v3+json"}});
+    if(r.ok) sha=(await r.json()).sha;
+    const body={ message:"시험기간 알림 설정 갱신", content:btoa(unescape(encodeURIComponent(JSON.stringify(cfg,null,2)))) };
+    if(sha) body.sha=sha;
+    const pr=await fetch(`https://api.github.com/repos/${REPO}/contents/notice.json`,{method:"PUT",
+      headers:{Authorization:"token "+token,Accept:"application/vnd.github.v3+json"}, body:JSON.stringify(body)});
+    if(!pr.ok){ const e=await pr.json(); throw new Error(e.message||pr.status); }
+    DB.notice=cfg;
+    toast("✅ 반영 완료 — 1~2분 후 알림 페이지에 적용됩니다");
+  }catch(e){ toast("실패: "+e.message); }
+  btn.disabled=false; btn.textContent=lb;
 }
 
 function renderDiff(){
