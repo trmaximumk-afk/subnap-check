@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-09-09 11:16",
-  "source_file": "프라임K수학_시간표학생배치_최신_20260908.xlsx",
-  "source_date": "20260908",
+  "updated_at": "2026-09-10 05:00",
+  "source_file": "프라임K수학_시간표학생배치_최신_20260909.xlsx",
+  "source_date": "20260909",
   "roster": [
     {
       "no": 1,
       "name": "박서아",
-      "school": "호수돈여자중학교",
+      "school": "충남여자중학교",
       "grade": "중1",
       "cls": "중1A·중1B",
       "clinic": "클리닉 화·목",
