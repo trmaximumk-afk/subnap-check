@@ -1,25 +1,12 @@
 {
-  "date": "2026-09-09",
-  "generated_at": "11:16",
+  "date": "2026-09-10",
+  "generated_at": "05:00",
   "summary": {
     "new": 0,
-    "withdrawn": 1,
-    "changed": 1
+    "withdrawn": 0,
+    "changed": 0
   },
-  "changes": [
-    {
-      "name": "박서아",
-      "kind": "changed",
-      "label": "정보변경",
-      "detail": "학교 호수돈여자중학교→충남여자중학교"
-    },
-    {
-      "name": "지효환",
-      "kind": "withdrawn",
-      "label": "퇴원",
-      "detail": "고3 동산고등학교"
-    }
-  ],
+  "changes": [],
   "excel_mismatch": [],
-  "excel_generated": "프라임K수학_시간표학생배치_최신_20260909.xlsx"
+  "excel_generated": null
 }
