@@ -95,7 +95,23 @@
       ]
     }
   ],
-  "exam_periods": [],
+  "exam_periods": [
+    {
+      "school": "충남여자중학교",
+      "grade": "중1",
+      "semester": "2학기",
+      "type": "중간",
+      "start": "2026-09-21",
+      "end": "",
+      "subjects": [
+        {
+          "subject": "수학",
+          "date": "",
+          "scope": ""
+        }
+      ]
+    }
+  ],
   "national": [
     {
       "name": "9월 평가원 모의평가",
