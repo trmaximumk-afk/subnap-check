@@ -140,6 +140,21 @@
           "scope": ""
         }
       ]
+    },
+    {
+      "school": "호수돈여자중학교",
+      "grade": "중2",
+      "semester": "2학기",
+      "type": "중간",
+      "start": "2026-10-06",
+      "end": "2026-10-07",
+      "subjects": [
+        {
+          "subject": "수학",
+          "date": "2026-10-06",
+          "scope": ""
+        }
+      ]
     }
   ],
   "national": [
