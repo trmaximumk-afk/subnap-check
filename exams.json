@@ -110,6 +110,21 @@
           "scope": ""
         }
       ]
+    },
+    {
+      "school": "충남여자중학교",
+      "grade": "중3",
+      "semester": "2학기",
+      "type": "중간",
+      "start": "2026-09-21",
+      "end": "2026-09-22",
+      "subjects": [
+        {
+          "subject": "수학",
+          "date": "2026-09-21",
+          "scope": ""
+        }
+      ]
     }
   ],
   "national": [
