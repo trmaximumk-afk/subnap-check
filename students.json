@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-14 05:00",
-  "count": 21,
+  "updated_at": "2026-09-14 20:02",
+  "count": 20,
   "students": [
     {
       "name": "박서아",
@@ -144,18 +144,6 @@
       "phone": "01022354227",
       "regDate": "20260202",
       "encNo": "3546392b476f547a39453070304c504c636c4c4d58413d3d",
-      "teacher": null
-    },
-    {
-      "name": "박시후",
-      "grade": "고1",
-      "school": "대전동산고등학교",
-      "cls": "1:2고등수학",
-      "mother": "01064374937",
-      "father": null,
-      "phone": "01064374937",
-      "regDate": "20260613",
-      "encNo": "3851562b7a7241444d6d4871726c6e4d62436d7471773d3d",
       "teacher": null
     },
     {
