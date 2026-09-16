@@ -1,19 +1,12 @@
 {
-  "date": "2026-09-15",
+  "date": "2026-09-17",
   "generated_at": "05:00",
   "summary": {
     "new": 0,
-    "withdrawn": 1,
+    "withdrawn": 0,
     "changed": 0
   },
-  "changes": [
-    {
-      "name": "박시후",
-      "kind": "withdrawn",
-      "label": "퇴원",
-      "detail": "고1 대전동산고등학교"
-    }
-  ],
+  "changes": [],
   "excel_mismatch": [],
-  "excel_generated": "프라임K수학_시간표학생배치_최신_20260915.xlsx"
+  "excel_generated": null
 }
