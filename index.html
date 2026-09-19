@@ -181,20 +181,6 @@ function csFind(fid,k){ const f=((DB.chuseok||{}).families||[]).find(x=>x.id===f
 function csSms(fid,k){ const r=csFind(fid,k); if(!r) return; copy(r.it.msg); const ph=(""+r.f.phone).replace(/\D/g,""); const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent); localStorage.setItem(csKey(fid,k),"1"); toast(r.f.label+" 문안 복사 → 문자앱 (카드 이미지는 직접 첨부!)"); setTimeout(()=>{ location.href=`sms:${ph}${ios?'&':'?'}body=${encodeURIComponent(r.it.msg)}`; render(); },300); }
 function csCopy(fid,k){ const r=csFind(fid,k); if(!r) return; copy(r.it.msg); toast(r.f.label+" 문안 복사 완료"); }
 function csMark(fid,k){ const key=csKey(fid,k); if(localStorage.getItem(key)) localStorage.removeItem(key); else localStorage.setItem(key,"1"); render(); }
-async function csSmsCards(fid,k){
-  const r=csFind(fid,k); if(!r) return;
-  await copy(r.it.msg);
-  const urls=[r.f.card,(DB.chuseok||{}).refCard].filter(Boolean);
-  for(const u of urls){
-    const a=document.createElement('a'); a.href=encodeURI("./"+u); a.download=u.split('/').pop();
-    document.body.appendChild(a); a.click(); a.remove();
-    await new Promise(res=>setTimeout(res,700));
-  }
-  toast("카드 2장 저장됨 — 문자앱에서 [첨부]로 방금 사진 2장만 선택!");
-  const ph=(""+r.f.phone).replace(/\D/g,""); const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent);
-  localStorage.setItem(csKey(fid,k),"1");
-  setTimeout(()=>{ location.href=`sms:${ph}${ios?'&':'?'}body=${encodeURIComponent(r.it.msg)}`; render(); },1000);
-}
 async function csShare(fid,k){
   const r=csFind(fid,k); if(!r) return;
   try{
@@ -206,8 +192,8 @@ async function csShare(fid,k){
         const b=await res.blob(); files.push(new File([b], u.split("/").pop(), {type:b.type||"image/jpeg"})); }catch(e){}
     }
     if(files.length && navigator.canShare && navigator.canShare({files})){
-      await navigator.share({files, text:r.it.msg});
-      localStorage.setItem(csKey(fid,k),"1"); toast(r.f.label+" 공유 완료 — 문안도 복사돼 있어요"); render();
+      await navigator.share({files});
+      localStorage.setItem(csKey(fid,k),"1"); toast(r.f.label+" 사진 공유 완료 — 문안은 복사돼 있어요(카톡이면 붙여넣기)"); render();
     }else{
       toast("사진 공유 미지원 브라우저 — 문안 복사됨, 카드는 새 탭에서 길게 눌러 저장");
       urls.forEach(u=>window.open(encodeURI("./"+u),"_blank"));
@@ -218,7 +204,7 @@ function renderChuseok(){
   const d = DB.chuseok;
   if(!d||!d.families) return `<div class="card">chuseok.json이 아직 없습니다.</div>`;
   let h = `<h2 class="sec"><span class="dot"></span>추석 개인화 문자 · ${d.families.length}가정 <span style="font-weight:400;font-size:11px;color:#98a">(${CS_UNTIL}까지 표시 후 탭 자동 종료)</span></h2>`;
-  h += `<div class="card" style="font-size:12px;line-height:1.7">📤 순서: <b>A-1 응원</b> 충남여중 9/20(일)·태평중 9/21(월) 저녁 → <b>B 추석</b> 9/21~22 오전 → <b>A-2 시험끝+추석</b> 충남여중 9/22(화)·태평중 9/23(수) 저녁<br>📩 <b>사진+문자</b>(기본): 카드 2장이 폰에 자동 저장되고 → 그 학부모 번호·본문이 채워진 문자앱이 열립니다. <b>[첨부]에서 방금 저장된 사진 2장만 선택</b>하면 끝!<br>🖼 공유시트 = 사진·문안을 앱 골라 공유 / ✉ 문자만 = 사진 없이 빠르게</div>`;
+  h += `<div class="card" style="font-size:12px;line-height:1.7">📤 순서: <b>A-1 응원</b> 충남여중 9/20(일)·태평중 9/21(월) 저녁 → <b>B 추석</b> 9/21~22 오전 → <b>A-2 시험끝+추석</b> 충남여중 9/22(화)·태평중 9/23(수) 저녁<br>발송법: <b>📩 ① 문자 보내기</b> → 그 학부모 번호로 문안이 채워진 문자창이 열림, 그대로 전송. 이어서 <b>🖼 ② 사진 보내기</b> → 공유시트에서 메시지 앱 선택 → <b>방금 그 대화가 맨 위에 떠서 한 번에 선택</b>, 카드 2장 전송. (카톡으로 보낼 가정은 ②에서 카톡 선택)</div>`;
   d.families.forEach(f=>{
     h += `<div class="card"><b>${esc(f.label)}</b> <span style="font-size:11px;color:#98a">${esc(f.school||"")} · ${fmtPhone(f.phone)}</span>`;
     (f.items||[]).forEach(it=>{
@@ -226,9 +212,8 @@ function renderChuseok(){
       h += `<div style="margin-top:9px;padding-top:9px;border-top:1px solid rgba(128,128,160,.18)">
         <div style="font-size:12px;margin-bottom:6px">${sent?"✅ 발송함":"⬜ 미발송"} · <b>${esc(it.k)}</b> · ${esc(it.when)}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${it.withCard?`<button class="btn-nav" onclick="csSmsCards('${f.id}','${it.k}')">📩 사진+문자</button>`:""}
-          ${it.withCard?`<button class="btn-nav" onclick="csShare('${f.id}','${it.k}')">🖼 공유시트</button>`:""}
-          <button class="btn-nav" onclick="csSms('${f.id}','${it.k}')">${it.withCard?"✉ 문자만":"📩 문자 보내기"}</button>
+          <button class="btn-nav" onclick="csSms('${f.id}','${it.k}')">📩 ${it.withCard?"① 문자 보내기":"문자 보내기"}</button>
+          ${it.withCard?`<button class="btn-nav" onclick="csShare('${f.id}','${it.k}')">🖼 ② 사진 보내기</button>`:""}
           <button class="btn-nav" onclick="csCopy('${f.id}','${it.k}')">📋 복사</button>
           <button class="btn-nav" onclick="csMark('${f.id}','${it.k}')">${sent?"↩ 발송 취소":"✔ 발송 표시"}</button>
         </div>
