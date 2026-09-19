@@ -115,9 +115,10 @@
 
 <script>
 const REPO = "trmaximumk-afk/subnap-check";
-const FILES = { payment:"data.json", students:"students.json", exams:"exams.json", changes:"changes.json", timetable:"timetable.json", alerts:"alerts.json", schedule:"schedule.json", notice:"notice.json" };
+const FILES = { payment:"data.json", students:"students.json", exams:"exams.json", changes:"changes.json", timetable:"timetable.json", alerts:"alerts.json", schedule:"schedule.json", notice:"notice.json", chuseok:"chuseok.json" };
 const TABS = [
   { id:"home",   ic:"🏠", lb:"홈" },
+  { id:"chuseok", ic:"🌕", lb:"추석" },
   { id:"roster", ic:"👥", lb:"현황" },
   { id:"pay",    ic:"💰", lb:"수납" },
   { id:"book",   ic:"📚", lb:"교재" },
@@ -148,8 +149,9 @@ async function loadAll(){
 }
 
 function render(){
+  if(tab==="chuseok" && !csActive()) tab="home";
   renderTabbar();
-  const map = { home:renderHome, roster:renderRoster, pay:renderPay, book:renderBook, exam:renderExam, sched:renderSched, diff:renderDiff };
+  const map = { home:renderHome, roster:renderRoster, pay:renderPay, book:renderBook, exam:renderExam, sched:renderSched, diff:renderDiff, chuseok:renderChuseok };
   $("view").innerHTML = (map[tab]||renderHome)();
   if(tab==="book") initBook();
   if(tab==="exam" && $("exMaths") && !$("exMaths").children.length) addMathRow();
@@ -160,13 +162,47 @@ function go(t){ tab=t; render(); }
 
 function renderTabbar(){
   const chg = DB.changes && DB.changes.summary ? (DB.changes.summary.new+DB.changes.summary.withdrawn+DB.changes.summary.changed) : 0;
-  $("tabbar").innerHTML = TABS.map(t=>{
+  $("tabbar").innerHTML = TABS.filter(t=>t.id!=="chuseok"||csActive()).map(t=>{
     let badge="";
     if(t.id==="diff" && chg>0) badge=`<span class="badge">${chg}</span>`;
     if(t.id==="pay"){ const u=payUnpaidCount(); if(u>0) badge=`<span class="badge">${u}</span>`; }
     if(t.id==="sched"){ const n=schedAlertItems().length; if(n>0) badge=`<span class="badge">${n}</span>`; }
+    if(t.id==="chuseok"){ const n=csUnsent(); if(n>0) badge=`<span class="badge">${n}</span>`; }
     return `<button class="${tab===t.id?'on':''}" onclick="go('${t.id}')">${badge}<span class="ic">${t.ic}</span><span class="lb2">${t.lb}</span></button>`;
   }).join("");
+}
+
+/* ── 추석 인사 탭 (시즌 한정 — CS_UNTIL 지나면 탭 자동 숨김, 원장 지시 2026-09-19) ── */
+const CS_UNTIL = "2026-09-27";
+function csActive(){ const d=daysUntil(CS_UNTIL); return d!=null && d>=0; }
+function csKey(fid,k){ return "cs_sent_"+fid+"_"+k; }
+function csUnsent(){ const d=DB.chuseok; if(!csActive()||!d||!d.families) return 0; let n=0; d.families.forEach(f=>(f.items||[]).forEach(it=>{ if(!localStorage.getItem(csKey(f.id,it.k))) n++; })); return n; }
+function csFind(fid,k){ const f=((DB.chuseok||{}).families||[]).find(x=>x.id===fid); if(!f) return null; const it=(f.items||[]).find(i=>i.k===k); return it? {f,it} : null; }
+function csSms(fid,k){ const r=csFind(fid,k); if(!r) return; copy(r.it.msg); const ph=(""+r.f.phone).replace(/\D/g,""); const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent); localStorage.setItem(csKey(fid,k),"1"); toast(r.f.label+" 문안 복사 → 문자앱 (카드 이미지는 직접 첨부!)"); setTimeout(()=>{ location.href=`sms:${ph}${ios?'&':'?'}body=${encodeURIComponent(r.it.msg)}`; render(); },300); }
+function csCopy(fid,k){ const r=csFind(fid,k); if(!r) return; copy(r.it.msg); toast(r.f.label+" 문안 복사 완료"); }
+function csMark(fid,k){ const key=csKey(fid,k); if(localStorage.getItem(key)) localStorage.removeItem(key); else localStorage.setItem(key,"1"); render(); }
+function renderChuseok(){
+  const d = DB.chuseok;
+  if(!d||!d.families) return `<div class="card">chuseok.json이 아직 없습니다.</div>`;
+  let h = `<h2 class="sec"><span class="dot"></span>추석 개인화 문자 · ${d.families.length}가정 <span style="font-weight:400;font-size:11px;color:#98a">(${CS_UNTIL}까지 표시 후 탭 자동 종료)</span></h2>`;
+  h += `<div class="card" style="font-size:12px;line-height:1.6">📤 순서: <b>A-1 응원</b> 9/20(일) 저녁 → <b>B 추석</b> 9/21(월)~22(화) 오전 → <b>A-2 시험끝+추석</b> 9/23(수) 저녁<br>🖼 카드 이미지는 문자앱에서 <b>직접 첨부</b> (추석문자_개인화 폴더의 추석카드_이름.png + 소개카드)<br>📩 버튼을 누르면 문안이 복사되고 문자앱이 열립니다(본문 자동 입력).</div>`;
+  d.families.forEach(f=>{
+    h += `<div class="card"><b>${esc(f.label)}</b> <span style="font-size:11px;color:#98a">${esc(f.school||"")} · ${fmtPhone(f.phone)}</span>`;
+    (f.items||[]).forEach(it=>{
+      const sent = !!localStorage.getItem(csKey(f.id,it.k));
+      h += `<div style="margin-top:9px;padding-top:9px;border-top:1px solid rgba(128,128,160,.18)">
+        <div style="font-size:12px;margin-bottom:6px">${sent?"✅ 발송함":"⬜ 미발송"} · <b>${esc(it.k)}</b> · ${esc(it.when)}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn-nav" onclick="csSms('${f.id}','${it.k}')">📩 문자 보내기</button>
+          <button class="btn-nav" onclick="csCopy('${f.id}','${it.k}')">📋 복사</button>
+          <button class="btn-nav" onclick="csMark('${f.id}','${it.k}')">${sent?"↩ 발송 취소":"✔ 발송 표시"}</button>
+        </div>
+        <details style="margin-top:6px"><summary style="font-size:11px;color:#98a;cursor:pointer">문안 보기</summary><div style="white-space:pre-wrap;font-size:12px;line-height:1.6;margin-top:6px;padding:8px;border-radius:8px;background:rgba(128,128,160,.08)">${esc(it.msg)}</div></details>
+      </div>`;
+    });
+    h += `</div>`;
+  });
+  return h;
 }
 
 function payUnpaidCount(){ const d=DB.payment; if(!d||!d.categories) return 0; return d.categories.reduce((s,c)=>s+(c.students?c.students.length:0),0); }
