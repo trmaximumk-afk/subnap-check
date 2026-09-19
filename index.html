@@ -181,11 +181,30 @@ function csFind(fid,k){ const f=((DB.chuseok||{}).families||[]).find(x=>x.id===f
 function csSms(fid,k){ const r=csFind(fid,k); if(!r) return; copy(r.it.msg); const ph=(""+r.f.phone).replace(/\D/g,""); const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent); localStorage.setItem(csKey(fid,k),"1"); toast(r.f.label+" 문안 복사 → 문자앱 (카드 이미지는 직접 첨부!)"); setTimeout(()=>{ location.href=`sms:${ph}${ios?'&':'?'}body=${encodeURIComponent(r.it.msg)}`; render(); },300); }
 function csCopy(fid,k){ const r=csFind(fid,k); if(!r) return; copy(r.it.msg); toast(r.f.label+" 문안 복사 완료"); }
 function csMark(fid,k){ const key=csKey(fid,k); if(localStorage.getItem(key)) localStorage.removeItem(key); else localStorage.setItem(key,"1"); render(); }
+async function csShare(fid,k){
+  const r=csFind(fid,k); if(!r) return;
+  try{
+    await copy(r.it.msg);
+    const urls=[r.f.card,(DB.chuseok||{}).refCard].filter(Boolean);
+    const files=[];
+    for(const u of urls){
+      try{ const res=await fetch(encodeURI("./"+u)); if(!res.ok) continue;
+        const b=await res.blob(); files.push(new File([b], u.split("/").pop(), {type:b.type||"image/jpeg"})); }catch(e){}
+    }
+    if(files.length && navigator.canShare && navigator.canShare({files})){
+      await navigator.share({files, text:r.it.msg});
+      localStorage.setItem(csKey(fid,k),"1"); toast(r.f.label+" 공유 완료 — 문안도 복사돼 있어요"); render();
+    }else{
+      toast("사진 공유 미지원 브라우저 — 문안 복사됨, 카드는 새 탭에서 길게 눌러 저장");
+      urls.forEach(u=>window.open(encodeURI("./"+u),"_blank"));
+    }
+  }catch(e){ if(!(""+e).includes("Abort")) toast("공유 취소 — 문안은 복사되어 있습니다"); }
+}
 function renderChuseok(){
   const d = DB.chuseok;
   if(!d||!d.families) return `<div class="card">chuseok.json이 아직 없습니다.</div>`;
   let h = `<h2 class="sec"><span class="dot"></span>추석 개인화 문자 · ${d.families.length}가정 <span style="font-weight:400;font-size:11px;color:#98a">(${CS_UNTIL}까지 표시 후 탭 자동 종료)</span></h2>`;
-  h += `<div class="card" style="font-size:12px;line-height:1.6">📤 순서: <b>A-1 응원</b> 9/20(일) 저녁 → <b>B 추석</b> 9/21(월)~22(화) 오전 → <b>A-2 시험끝+추석</b> 9/23(수) 저녁<br>🖼 카드 이미지는 문자앱에서 <b>직접 첨부</b> (추석문자_개인화 폴더의 추석카드_이름.png + 소개카드)<br>📩 버튼을 누르면 문안이 복사되고 문자앱이 열립니다(본문 자동 입력).</div>`;
+  h += `<div class="card" style="font-size:12px;line-height:1.7">📤 순서: <b>A-1 응원</b> 충남여중 9/20(일)·태평중 9/21(월) 저녁 → <b>B 추석</b> 9/21~22 오전 → <b>A-2 시험끝+추석</b> 충남여중 9/22(화)·태평중 9/23(수) 저녁<br>🖼 <b>사진+문안</b>: 카드 2장+문안을 공유시트로 — 문자앱 고르고 받는 사람만 지정(문안은 복사도 되어 있음)<br>📩 <b>문자 보내기</b>: 번호·본문 자동 입력(사진 없이 빠르게)</div>`;
   d.families.forEach(f=>{
     h += `<div class="card"><b>${esc(f.label)}</b> <span style="font-size:11px;color:#98a">${esc(f.school||"")} · ${fmtPhone(f.phone)}</span>`;
     (f.items||[]).forEach(it=>{
@@ -193,6 +212,7 @@ function renderChuseok(){
       h += `<div style="margin-top:9px;padding-top:9px;border-top:1px solid rgba(128,128,160,.18)">
         <div style="font-size:12px;margin-bottom:6px">${sent?"✅ 발송함":"⬜ 미발송"} · <b>${esc(it.k)}</b> · ${esc(it.when)}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${it.withCard?`<button class="btn-nav" onclick="csShare('${f.id}','${it.k}')">🖼 사진+문안</button>`:""}
           <button class="btn-nav" onclick="csSms('${f.id}','${it.k}')">📩 문자 보내기</button>
           <button class="btn-nav" onclick="csCopy('${f.id}','${it.k}')">📋 복사</button>
           <button class="btn-nav" onclick="csMark('${f.id}','${it.k}')">${sent?"↩ 발송 취소":"✔ 발송 표시"}</button>
