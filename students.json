@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-10-02 05:00",
-  "count": 19,
+  "updated_at": "2026-10-02 19:42",
+  "count": 18,
   "students": [
     {
       "name": "박서아",
@@ -120,18 +120,6 @@
       "phone": "01072002867",
       "regDate": "20240122",
       "encNo": "684c4c6743702f6c61434a6e4561367a7746507762773d3d",
-      "teacher": null
-    },
-    {
-      "name": "김효민",
-      "grade": "고1",
-      "school": "호수돈여자고등학교",
-      "cls": "1:2고등수학",
-      "mother": "01022354227",
-      "father": null,
-      "phone": "01022354227",
-      "regDate": "20260202",
-      "encNo": "3546392b476f547a39453070304c504c636c4c4d58413d3d",
       "teacher": null
     },
     {
