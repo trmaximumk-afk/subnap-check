@@ -115,10 +115,11 @@
 
 <script>
 const REPO = "trmaximumk-afk/subnap-check";
-const FILES = { payment:"data.json", students:"students.json", exams:"exams.json", changes:"changes.json", timetable:"timetable.json", alerts:"alerts.json", schedule:"schedule.json", notice:"notice.json", chuseok:"chuseok.json" };
+const FILES = { payment:"data.json", students:"students.json", exams:"exams.json", changes:"changes.json", timetable:"timetable.json", alerts:"alerts.json", schedule:"schedule.json", notice:"notice.json", chuseok:"chuseok.json", seminar:"seminar_msg.json" };
 const TABS = [
   { id:"home",   ic:"🏠", lb:"홈" },
   { id:"chuseok", ic:"🌕", lb:"추석" },
+  { id:"seminar", ic:"📣", lb:"설명회" },
   { id:"roster", ic:"👥", lb:"현황" },
   { id:"pay",    ic:"💰", lb:"수납" },
   { id:"book",   ic:"📚", lb:"교재" },
@@ -150,8 +151,9 @@ async function loadAll(){
 
 function render(){
   if(tab==="chuseok" && !csActive()) tab="home";
+  if(tab==="seminar" && !smActive()) tab="home";
   renderTabbar();
-  const map = { home:renderHome, roster:renderRoster, pay:renderPay, book:renderBook, exam:renderExam, sched:renderSched, diff:renderDiff, chuseok:renderChuseok };
+  const map = { home:renderHome, roster:renderRoster, pay:renderPay, book:renderBook, exam:renderExam, sched:renderSched, diff:renderDiff, chuseok:renderChuseok, seminar:renderSeminar };
   $("view").innerHTML = (map[tab]||renderHome)();
   if(tab==="book") initBook();
   if(tab==="exam" && $("exMaths") && !$("exMaths").children.length) addMathRow();
@@ -162,12 +164,13 @@ function go(t){ tab=t; render(); }
 
 function renderTabbar(){
   const chg = DB.changes && DB.changes.summary ? (DB.changes.summary.new+DB.changes.summary.withdrawn+DB.changes.summary.changed) : 0;
-  $("tabbar").innerHTML = TABS.filter(t=>t.id!=="chuseok"||csActive()).map(t=>{
+  $("tabbar").innerHTML = TABS.filter(t=>(t.id!=="chuseok"||csActive())&&(t.id!=="seminar"||smActive())).map(t=>{
     let badge="";
     if(t.id==="diff" && chg>0) badge=`<span class="badge">${chg}</span>`;
     if(t.id==="pay"){ const u=payUnpaidCount(); if(u>0) badge=`<span class="badge">${u}</span>`; }
     if(t.id==="sched"){ const n=schedAlertItems().length; if(n>0) badge=`<span class="badge">${n}</span>`; }
     if(t.id==="chuseok"){ const n=csUnsent(); if(n>0) badge=`<span class="badge">${n}</span>`; }
+    if(t.id==="seminar"){ const n=smUnsent(); if(n>0) badge=`<span class="badge">${n}</span>`; }
     return `<button class="${tab===t.id?'on':''}" onclick="go('${t.id}')">${badge}<span class="ic">${t.ic}</span><span class="lb2">${t.lb}</span></button>`;
   }).join("");
 }
@@ -220,6 +223,61 @@ function renderChuseok(){
       </div>`;
     });
     h += `</div>`;
+  });
+  return h;
+}
+
+/* ── 설명회 초청 탭 (시즌 한정 — SM_UNTIL 지나면 탭 자동 숨김, 2026-10-03) ──
+   seminar_msg.json: 가정별 문안(전화번호 없음) + 카드뉴스 경로. 번호는 students.json에서 찾는다. */
+const SM_UNTIL = "2026-10-17";
+const SM_CHECK = "https://trmaximumk-afk.github.io/prime-k-math/seminar-check.html";
+function smActive(){ const d=daysUntil(SM_UNTIL); return d!=null && d>=0; }
+function smKey(fid){ return "sm_sent_"+fid; }
+function smFams(){ const d=DB.seminar; return (d&&d.families)||[]; }
+function smUnsent(){ if(!smActive()) return 0; return smFams().filter(f=>!localStorage.getItem(smKey(f.id))).length; }
+function smPhone(f){ const names=(""+f.id).split("·"); const st=((DB.students||{}).students||[]).find(s=>names.includes(s.name)); return st ? (st.mother||st.phone||st.father||"") : ""; }
+function smFind(fid){ return smFams().find(x=>x.id===fid)||null; }
+function smCopy(fid){ const f=smFind(fid); if(!f) return; copy(f.msg); toast(f.label+" 문안 복사 완료"); }
+function smMark(fid){ const k=smKey(fid); if(localStorage.getItem(k)) localStorage.removeItem(k); else localStorage.setItem(k,"1"); render(); }
+async function smShare(fid){
+  const f=smFind(fid); if(!f) return;
+  try{
+    await copy(f.msg);
+    const urls=((DB.seminar||{}).cards||[]).map(u=>/^https?:/.test(u)?u:encodeURI("./"+u));
+    const files=[];
+    for(const u of urls){
+      try{ const res=await fetch(u); if(!res.ok) continue;
+        const b=await res.blob(); files.push(new File([b], u.split("/").pop(), {type:b.type||"image/jpeg"})); }catch(e){}
+    }
+    if(files.length && navigator.canShare && navigator.canShare({files})){
+      await navigator.share({files, text:f.msg});
+      localStorage.setItem(smKey(fid),"1"); toast(f.label+" 공유 완료 — 앱이 글을 빼먹으면 붙여넣기(문안 복사돼 있음)"); render();
+    }else{
+      toast("사진 공유 미지원 브라우저 — 문안 복사됨, 카드는 새 탭에서 길게 눌러 저장");
+      urls.forEach(u=>window.open(u,"_blank"));
+    }
+  }catch(e){ if(!(""+e).includes("Abort")) toast("공유 취소 — 문안은 복사되어 있습니다"); }
+}
+function renderSeminar(){
+  const d=DB.seminar;
+  let h = `<h2 class="sec"><span class="dot"></span>설명회 초청 · 재원생 학부모</h2>`;
+  h += `<div class="card" style="font-size:12.5px;line-height:1.7"><b>10/15(목) 오전 10:30 · 10/17(토) 오후 1:30</b> · 프라임K수학 강의실<br>
+    <a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${SM_CHECK}" target="_blank" rel="noopener">📋 신청 현황 보기</a>
+    <div style="margin-top:8px;color:#98a">발송법: <b>🖼 카드뉴스+문안 보내기</b> → 공유시트에서 문자(메시지) 앱 → 표시된 번호로 받는 사람 찾아 전송. 카드뉴스와 문안이 한 번에 갑니다. 앱이 글을 빼면 문안이 복사돼 있으니 붙여넣기만 하세요. (${SM_UNTIL}까지 표시 후 탭 자동 종료)</div></div>`;
+  if(!d||!d.families) return h+`<div class="card">seminar_msg.json이 아직 없습니다.</div>`;
+  const sent=d.families.filter(f=>localStorage.getItem(smKey(f.id))).length;
+  h += `<div style="font-size:12px;color:#98a;margin:4px 2px 8px">${d.families.length}가정 중 ${sent}가정 발송 표시</div>`;
+  d.families.forEach(f=>{
+    const ok=!!localStorage.getItem(smKey(f.id)); const ph=smPhone(f);
+    h += `<div class="card"><b>${esc(f.label)}</b> <span style="font-size:11px;color:#98a">${esc(f.school||"")} · ${ph?fmtPhone(ph):"번호 없음"}</span>
+      <div style="font-size:12px;margin:6px 0">${ok?"✅ 발송함":"⬜ 미발송"}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-nav" onclick="smShare('${f.id}')">🖼 카드뉴스+문안 보내기</button>
+        <button class="btn-nav" onclick="smCopy('${f.id}')">📋 복사</button>
+        <button class="btn-nav" onclick="smMark('${f.id}')">${ok?"↩ 발송 취소":"✔ 발송 표시"}</button>
+      </div>
+      <details style="margin-top:6px"><summary style="font-size:11px;color:#98a;cursor:pointer">문안 보기</summary><div style="white-space:pre-wrap;font-size:12px;line-height:1.6;margin-top:6px;padding:8px;border-radius:8px;background:rgba(128,128,160,.08)">${esc(f.msg)}</div></details>
+    </div>`;
   });
   return h;
 }
