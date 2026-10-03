@@ -1,19 +1,12 @@
 {
-  "date": "2026-10-03",
+  "date": "2026-10-04",
   "generated_at": "05:00",
   "summary": {
     "new": 0,
-    "withdrawn": 1,
+    "withdrawn": 0,
     "changed": 0
   },
-  "changes": [
-    {
-      "name": "김효민",
-      "kind": "withdrawn",
-      "label": "퇴원",
-      "detail": "고1 호수돈여자고등학교"
-    }
-  ],
+  "changes": [],
   "excel_mismatch": [],
-  "excel_generated": "프라임K수학_시간표학생배치_최신_20261003.xlsx"
+  "excel_generated": null
 }
