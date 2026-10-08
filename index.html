@@ -770,7 +770,14 @@ async function mmShare(){
 
 /* ── 시험기간 알림 (prime-k-notice 페이지 제어 + 문자·카톡 문안) ── */
 const NOTICE_BASE = "https://trmaximumk-afk.github.io/prime-k-notice/";
-const NOTICE_TIMES = [ {id:"1900",lb:"1타임 19:00"}, {id:"1950",lb:"2타임 19:50"}, {id:"2040",lb:"3타임 20:40"}, {id:"2130",lb:"4타임 21:30"} ];
+// 타임 id는 prime-k-notice 두 페이지의 TIMES와 같아야 함 (그쪽에 없는 id는 페이지가 무시)
+const NOTICE_TIME_GROUPS = [
+  { name:"평일 저녁", part:"저녁", ids:["1900","1950","2040","2130"] },
+  { name:"오전", part:"오전", ids:["0840","0930","1020","1110"] },
+  { name:"저녁", part:"저녁", ids:["1940","2030","2120","2210"] }
+];
+const ntHM = id => id.slice(0,2)+":"+id.slice(2);
+const ntPartOf = id => (NOTICE_TIME_GROUPS.find(g=>g.ids.includes(id))||{}).part;
 let ntManual1=false, ntManual2=false;
 function ntCfg(){ const n=DB.notice||{}; return { season:n.season||"", timetable:n.timetable||{}, consult:Object.assign({days:[],holiday:""}, n.consult||{}) }; }
 function fmtMDW(ymd){ const p=(""+(ymd||"")).split("-").map(Number); if(p.length<3||p.some(isNaN)) return ""; const WD=["일","월","화","수","목","금","토"]; return `${p[1]}월 ${p[2]}일(${WD[new Date(p[0],p[1]-1,p[2]).getDay()]})`; }
@@ -778,10 +785,11 @@ function noticeSection(){
   const n = ntCfg();
   const dayRows = [0,1,2].map(i=>{
     const d = (n.consult.days||[])[i] || {date:"",times:["1900","1950","2040","2130"]};
-    const cbs = NOTICE_TIMES.map(t=>`<label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)"><input type="checkbox" class="ntT${i}" value="${t.id}" ${(d.times||[]).includes(t.id)?"checked":""} onchange="ntRefresh()">${t.lb}</label>`).join("");
+    const cbs = NOTICE_TIME_GROUPS.map(g=>`<div style="font-size:11px;font-weight:700;color:var(--muted);margin-top:6px">${g.name}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:2px">${g.ids.map(id=>`<label style="display:flex;align-items:center;gap:3px;font-size:12px;color:var(--muted)"><input type="checkbox" class="ntT${i}" value="${id}" ${(d.times||[]).includes(id)?"checked":""} onchange="ntRefresh()">${ntHM(id)}</label>`).join("")}</div>`).join("");
     return `<div style="background:#f8f8fc;border-radius:9px;padding:8px;margin-bottom:8px">
       <input type="date" id="ntD${i}" value="${esc(d.date||"")}" onchange="ntRefresh()" style="width:100%">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px">${cbs}</div></div>`;
+      ${cbs}</div>`;
   }).join("");
   return `<h2 class="sec"><span class="dot"></span>📣 시험기간 알림 (문자·카톡 + 페이지 반영)</h2>
   <div class="card">
@@ -823,7 +831,7 @@ function ntDaysFromForm(){
     const d=$("ntD"+i); if(!d||!d.value) return;
     const times=[...document.querySelectorAll(".ntT"+i+":checked")].map(c=>c.value);
     if(!times.length) return;
-    out.push({date:d.value, times});
+    out.push({date:d.value, times:times.sort()});
   });
   out.sort((a,b)=>a.date<b.date?-1:1);
   return out;
@@ -835,7 +843,8 @@ function ntMsg1(){
 function ntMsg2(){
   const days=ntDaysFromForm(); const hol=$("ntHoliday").value.trim();
   let period=""; if(days.length){ const f=fmtMDW(days[0].date), l=fmtMDW(days[days.length-1].date); period = days.length>1 ? `${f}~${l}` : f; }
-  return `시험 다들 정말 고생 많았어요! 🙌\n\n${hol?hol+"\n\n":""}${period?period+" 저녁에":"저녁에"} 1:1 성적 상담 진행해요!\n\n👇 아래 링크 꼭 들어가서 확인해주세요! 👇\n${NOTICE_BASE}consult-booking.html\n\n· 시간 선착순—먼저 예약하는 사람 이김!\n· 이름 + 시간 클릭만 하면 예약 끝\n\n📚 상담하러 올 때\n「채점된 전과목 시험지」 모두 들고 와주세요.`;
+  const parts=["오전","저녁"].filter(pt=>days.some(d=>d.times.some(t=>ntPartOf(t)===pt))).join("·")||"저녁";
+  return `시험 다들 정말 고생 많았어요! 🙌\n\n${hol?hol+"\n\n":""}${period?period+" ":""}${parts}에 1:1 성적 상담 진행해요!\n\n👇 아래 링크 꼭 들어가서 확인해주세요! 👇\n${NOTICE_BASE}consult-booking.html\n\n· 시간 선착순—먼저 예약하는 사람 이김!\n· 이름 + 시간 클릭만 하면 예약 끝\n\n📚 상담하러 올 때\n「채점된 전과목 시험지」 모두 들고 와주세요.`;
 }
 function ntRefresh(){
   if(!$("ntPrev1")) return;
