@@ -1,12 +1,13 @@
 {
- "updated_at": "2026-10-03",
+ "updated_at": "2026-10-13",
  "until": "2026-10-17",
  "cards": [
-  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards/01.jpg",
-  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards/02.jpg",
-  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards/03.jpg",
-  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards/04.jpg",
-  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards/05.jpg"
+  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards2/01.jpg",
+  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards2/02.jpg",
+  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards2/03.jpg",
+  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards2/04.jpg",
+  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards2/05.jpg",
+  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards2/06.jpg"
  ],
  "families": [
   {
@@ -111,5 +112,12 @@
    "school": "충남여중 중3 · 호수돈여고 고2",
    "msg": "[프라임K수학] 박소은·박다연 학부모님, 안녕하세요.\n\n소은이는 내년이면 고교학점제와 내신 5등급제 아래에서 고1을 시작하고, 다연이가 다니는 고2는 5등급제가 처음 적용된 학년이라 두 아이 모두에게 필요한 이야기를 준비했습니다.\n\n이런 이야기를 한자리에서 정리해 드리려고 10월에 설명회를 엽니다.\n\n▶ 프라임K수학 10월 학부모 설명회\n   \"고교학점제·5등급제 시대, 수학은 무엇이 달라졌나\"\n   · 1회차 10월 15일(목) 오전 10시 30분\n   · 2회차 10월 17일(토) 오후 1시 30분\n   (같은 내용이라 편한 회차 하나만 오시면 됩니다 / 프라임K수학 강의실)\n\n학부모님께서 들으러 오셔도 좋고, 주변에 같은 고민을 하시는 분이 계시면\n함께 오셔도 좋습니다(지인 동반 환영).\n지인분께는 함께 보낸 카드뉴스를 전해 주세요. 사진 속 QR로 바로 신청하실 수 있습니다.\n\n▶ 참석 날짜 고르기 (날짜만 누르시면 됩니다)\nhttps://trmaximumk-afk.github.io/prime-k-math/seminar-rsvp.html?t=vFR3FwSsoE\n\n- 프라임K수학 원장 드림"
   }
+ ],
+ "cards_prev": [
+  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards/01.jpg",
+  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards/02.jpg",
+  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards/03.jpg",
+  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards/04.jpg",
+  "https://trmaximumk-afk.github.io/prime-k-math/seminar_cards/05.jpg"
  ]
 }
