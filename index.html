@@ -239,6 +239,19 @@ function smPhone(f){ const names=(""+f.id).split("·"); const st=((DB.students||
 function smFind(fid){ return smFams().find(x=>x.id===fid)||null; }
 function smCopy(fid){ const f=smFind(fid); if(!f) return; copy(f.msg); toast(f.label+" 문안 복사 완료"); }
 function smMark(fid){ const k=smKey(fid); if(localStorage.getItem(k)) localStorage.removeItem(k); else localStorage.setItem(k,"1"); render(); }
+function smGen(){ return (DB.seminar||{}).general||null; }
+function smCopyGen(){ const g=smGen(); if(!g) return; copy(g.msg); toast("불특정 학부모용 문안 복사 완료"); }
+async function smShareGen(){
+  const g=smGen(); if(!g) return;
+  try{
+    await copy(g.msg);
+    const urls=((DB.seminar||{}).cards||[]).map(u=>/^https?:/.test(u)?u:encodeURI("./"+u));
+    const files=[];
+    for(const u of urls){ try{ const res=await fetch(u); if(!res.ok) continue; const b=await res.blob(); files.push(new File([b], u.split("/").pop(), {type:b.type||"image/jpeg"})); }catch(e){} }
+    if(files.length && navigator.canShare && navigator.canShare({files})){ await navigator.share({files, text:g.msg}); toast("공유 완료 — 앱이 글을 빼먹으면 붙여넣기(문안 복사돼 있음)"); }
+    else{ toast("사진 공유 미지원 브라우저 — 문안 복사됨, 카드는 새 탭에서 길게 눌러 저장"); urls.forEach(u=>window.open(u,"_blank")); }
+  }catch(e){ if(!(""+e).includes("Abort")) toast("공유 취소 — 문안은 복사되어 있습니다"); }
+}
 async function smShare(fid){
   const f=smFind(fid); if(!f) return;
   try{
@@ -265,6 +278,17 @@ function renderSeminar(){
     <a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${SM_CHECK}" target="_blank" rel="noopener">📋 신청 현황 보기</a>
     <div style="margin-top:8px;color:#98a">발송법: <b>🖼 카드뉴스+문안 보내기</b> → 공유시트에서 문자(메시지) 앱 → 표시된 번호로 받는 사람 찾아 전송. 카드뉴스와 문안이 한 번에 갑니다. 앱이 글을 빼면 문안이 복사돼 있으니 붙여넣기만 하세요. (${SM_UNTIL}까지 표시 후 탭 자동 종료)</div></div>`;
   if(!d||!d.families) return h+`<div class="card">seminar_msg.json이 아직 없습니다.</div>`;
+  const g=d.general;
+  if(g){
+    h += `<div class="card" style="border:2px solid #1C9AA0"><b>📢 ${esc(g.label)}</b> <span style="font-size:11px;color:#98a">지인·외부 학부모 · 단톡방 · 커뮤니티</span>
+      <div style="font-size:11.5px;margin:6px 0;color:#b5523f">(광고) 표기·수신거부 문구 포함 — 밤 9시~아침 8시에는 보내지 마세요</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-nav" onclick="smShareGen()">🖼 카드뉴스+문안 보내기</button>
+        <button class="btn-nav" onclick="smCopyGen()">📋 복사</button>
+      </div>
+      <details style="margin-top:6px"><summary style="font-size:11px;color:#98a;cursor:pointer">문안 보기</summary><div style="white-space:pre-wrap;font-size:12px;line-height:1.6;margin-top:6px;padding:8px;border-radius:8px;background:rgba(127,127,127,.08)">${esc(g.msg)}</div></details>
+    </div>`;
+  }
   const sent=d.families.filter(f=>localStorage.getItem(smKey(f.id))).length;
   h += `<div style="font-size:12px;color:#98a;margin:4px 2px 8px">${d.families.length}가정 중 ${sent}가정 발송 표시</div>`;
   d.families.forEach(f=>{
