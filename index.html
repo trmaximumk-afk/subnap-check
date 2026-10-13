@@ -229,10 +229,10 @@ function renderChuseok(){
 
 /* ── 설명회 초청 탭 (시즌 한정 — SM_UNTIL 지나면 탭 자동 숨김, 2026-10-03) ──
    seminar_msg.json: 가정별 문안(전화번호 없음) + 카드뉴스 경로. 번호는 students.json에서 찾는다. */
-const SM_UNTIL = "2026-10-17";
+const SM_UNTIL = "2026-10-24";
 const SM_CHECK = "https://trmaximumk-afk.github.io/prime-k-math/seminar-check.html";
 function smActive(){ const d=daysUntil(SM_UNTIL); return d!=null && d>=0; }
-function smKey(fid){ return "sm_sent_"+fid; }
+function smKey(fid){ const r=(DB.seminar&&DB.seminar.round)||""; return "sm_sent_"+(r?r+"_":"")+fid; }
 function smFams(){ const d=DB.seminar; return (d&&d.families)||[]; }
 function smUnsent(){ if(!smActive()) return 0; return smFams().filter(f=>!localStorage.getItem(smKey(f.id))).length; }
 function smPhone(f){ const names=(""+f.id).split("·"); const st=((DB.students||{}).students||[]).find(s=>names.includes(s.name)); return st ? (st.mother||st.phone||st.father||"") : ""; }
@@ -274,7 +274,7 @@ async function smShare(fid){
 function renderSeminar(){
   const d=DB.seminar;
   let h = `<h2 class="sec"><span class="dot"></span>설명회 초청 · 재원생 학부모</h2>`;
-  h += `<div class="card" style="font-size:12.5px;line-height:1.7"><b>10/15(목) 오전 10:30 · 10/17(토) 오후 1:30</b> · 프라임K수학 강의실<br>
+  h += `<div class="card" style="font-size:12.5px;line-height:1.7"><b>10/22(목) 오전 10:30 · 10/24(토) 오후 1:30</b> · 프라임K수학 강의실 <span style="color:#b5523f">(10/13 일정 1주 연기 — 아래 문안은 연기 안내)</span><br>
     <a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${SM_CHECK}" target="_blank" rel="noopener">📋 신청 현황 보기</a>
     <div style="margin-top:8px;color:#98a">발송법: <b>🖼 카드뉴스+문안 보내기</b> → 공유시트에서 문자(메시지) 앱 → 표시된 번호로 받는 사람 찾아 전송. 카드뉴스와 문안이 한 번에 갑니다. 앱이 글을 빼면 문안이 복사돼 있으니 붙여넣기만 하세요. (${SM_UNTIL}까지 표시 후 탭 자동 종료)</div></div>`;
   if(!d||!d.families) return h+`<div class="card">seminar_msg.json이 아직 없습니다.</div>`;
