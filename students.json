@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-10-14 05:00",
-  "count": 18,
+  "updated_at": "2026-10-15 05:00",
+  "count": 19,
   "students": [
     {
       "name": "박서아",
@@ -72,6 +72,18 @@
       "phone": "01030884225",
       "regDate": "20250414",
       "encNo": "514b6a6c526b48624e392b4d4c70636c4f73492b70673d3d",
+      "teacher": null
+    },
+    {
+      "name": "박은율",
+      "grade": "중3",
+      "school": "호수돈여자중학교",
+      "cls": "1:3중등수학",
+      "mother": "01092174583",
+      "father": null,
+      "phone": "01092174583",
+      "regDate": "20261014",
+      "encNo": "49744a7751736c6774716e2b585973354b77446d59413d3d",
       "teacher": null
     },
     {
