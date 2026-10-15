@@ -1,19 +1,12 @@
 {
-  "date": "2026-10-15",
+  "date": "2026-10-16",
   "generated_at": "05:00",
   "summary": {
-    "new": 1,
+    "new": 0,
     "withdrawn": 0,
     "changed": 0
   },
-  "changes": [
-    {
-      "name": "박은율",
-      "kind": "new",
-      "label": "신입",
-      "detail": "중3 호수돈여자중학교"
-    }
-  ],
+  "changes": [],
   "excel_mismatch": [],
-  "excel_generated": "프라임K수학_시간표학생배치_최신_20261015.xlsx"
+  "excel_generated": null
 }
