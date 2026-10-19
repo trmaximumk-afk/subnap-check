@@ -1,11 +1,18 @@
 {
-  "updated_at": "2026-10-19 05:00",
+  "updated_at": "2026-10-20 05:00",
   "targets": [
     {
       "school": "대전성모여자고등학교",
       "grade": "고2",
       "students": [
         "박서연"
+      ]
+    },
+    {
+      "school": "대전중앙중학교",
+      "grade": "중3",
+      "students": [
+        "한성용"
       ]
     },
     {
