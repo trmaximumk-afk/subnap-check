@@ -282,8 +282,67 @@ async function smShare(fid){
     }
   }catch(e){ if(!(""+e).includes("Abort")) toast("공유 취소 — 문안은 복사되어 있습니다"); }
 }
+/* 문자만 보내기 (mode:"text", 2026-10-20 목요일 유튜브 라이브 전환) — 번호+본문 채운 문자앱 열기, 누르면 발송 표시 */
+function smSms(fid){
+  const f=smFind(fid); if(!f) return; const ph=(""+smPhone(f)).replace(/\D/g,"");
+  if(!ph){ copy(f.msg); toast(f.label+" 번호 없음 — 문안만 복사했습니다"); return; }
+  copy(f.msg); localStorage.setItem(smKey(fid),"1");
+  const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+  toast(f.label+" 문자앱 열기 (문안도 복사돼 있음)");
+  setTimeout(()=>{ location.href=`sms:${ph}${ios?'&':'?'}body=${encodeURIComponent(f.msg)}`; render(); },300);
+}
+async function smShareGenText(){
+  const g=smGen(); if(!g) return; await copy(g.msg);
+  try{ if(navigator.share){ await navigator.share({text:g.msg}); toast("공유 완료"); } else toast("문안 복사 완료 — 붙여넣어 보내세요"); }
+  catch(e){ if(!(""+e).includes("Abort")) toast("공유 취소 — 문안은 복사되어 있습니다"); }
+}
+const SM_GROUPS=[
+  {g:"thu", t:"목요일 신청 가정", s:"유튜브 라이브로 바뀐 걸 꼭 알려야 하는 가정"},
+  {g:"none", t:"아직 날짜를 안 고른 가정", s:"목요일 라이브·토요일 강의실 중 고르게 안내"},
+  {g:"no", t:"불참이라고 답한 가정", s:"집에서 볼 수 있게 됐다고 한 번 더 안내"},
+  {g:"sat", t:"토요일 신청 가정", s:"토요일은 그대로, 목요일 라이브도 볼 수 있다는 안내"}
+];
+function renderSeminarText(d){
+  let h = `<h2 class="sec"><span class="dot"></span>설명회 안내 · 목요일 유튜브 라이브 전환</h2>`;
+  h += `<div class="card" style="font-size:12.5px;line-height:1.7"><b>10/22(목) 오전 10:30 유튜브 라이브</b> (더루멘 교육콘텐츠제작소 채널)<br><b>10/24(토) 오후 1:30 프라임K수학 강의실</b> (그대로)<br>
+    <a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${SM_CHECK}" target="_blank" rel="noopener">📋 신청 현황 보기</a>
+    ${d.live_url?`<a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${esc(d.live_url)}" target="_blank" rel="noopener">▶ 라이브 링크 확인</a>`:""}
+    <div style="margin-top:8px;color:#98a">발송법: <b>📩 문자 보내기</b>를 누르면 문자앱이 받는 번호와 본문이 채워진 채로 열립니다. 전송만 누르세요(누르는 순간 발송 표시). 이번 안내는 글만 보냅니다. 카드뉴스에는 목요일도 강의실로 적혀 있어 붙이지 않습니다.<br>
+    목요일 아침 링크 알림은 <b>📋 신청 현황 보기</b> → 문안에서 <b>목요일 아침 링크 알림</b>을 골라 1회차 신청자에게 💬 문자로 보내세요.</div></div>`;
+  const g=d.general;
+  if(g){
+    h += `<div class="card" style="border:2px solid #1C9AA0"><b>📢 ${esc(g.label)}</b> <span style="font-size:11px;color:#98a">지인·외부 학부모 · 단톡방 · 커뮤니티</span>
+      <div style="font-size:11.5px;margin:6px 0;color:#b5523f">(광고) 표기·수신거부 문구 포함 — 밤 9시~아침 8시에는 보내지 마세요</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-nav" onclick="smShareGenText()">📤 문안 보내기</button>
+        <button class="btn-nav" onclick="smCopyGen()">📋 복사</button>
+      </div>
+      <details style="margin-top:6px"><summary style="font-size:11px;color:#98a;cursor:pointer">문안 보기</summary><div style="white-space:pre-wrap;font-size:12px;line-height:1.6;margin-top:6px;padding:8px;border-radius:8px;background:rgba(127,127,127,.08)">${esc(g.msg)}</div></details>
+    </div>`;
+  }
+  const sent=d.families.filter(f=>localStorage.getItem(smKey(f.id))).length;
+  h += `<div style="font-size:12px;color:#98a;margin:4px 2px 8px">재원생 ${d.families.length}가정 중 ${sent}가정 발송 표시</div>`;
+  SM_GROUPS.forEach(G=>{
+    const fs=d.families.filter(f=>(f.group||"none")===G.g); if(!fs.length) return;
+    h += `<div style="margin:14px 2px 6px"><b style="font-size:13.5px">${G.t} ${fs.length}</b> <span style="font-size:11.5px;color:#98a">${G.s}</span></div>`;
+    fs.forEach(f=>{
+      const ok=!!localStorage.getItem(smKey(f.id)); const ph=smPhone(f);
+      h += `<div class="card"><b>${esc(f.label)}</b> <span style="font-size:11px;color:#98a">${esc(f.school||"")} · ${ph?fmtPhone(ph):"번호 없음"}</span>
+        <div style="font-size:12px;margin:6px 0">${ok?"✅ 발송함":"⬜ 미발송"}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn-nav" onclick="smSms('${f.id}')">📩 문자 보내기</button>
+          <button class="btn-nav" onclick="smCopy('${f.id}')">📋 복사</button>
+          <button class="btn-nav" onclick="smMark('${f.id}')">${ok?"↩ 발송 취소":"✔ 발송 표시"}</button>
+        </div>
+        <details style="margin-top:6px"><summary style="font-size:11px;color:#98a;cursor:pointer">문안 보기</summary><div style="white-space:pre-wrap;font-size:12px;line-height:1.6;margin-top:6px;padding:8px;border-radius:8px;background:rgba(128,128,160,.08)">${esc(f.msg)}</div></details>
+      </div>`;
+    });
+  });
+  return h;
+}
 function renderSeminar(){
   const d=DB.seminar;
+  if(d&&d.families&&d.mode==="text") return renderSeminarText(d);
   let h = `<h2 class="sec"><span class="dot"></span>설명회 초청 · 재원생 학부모</h2>`;
   h += `<div class="card" style="font-size:12.5px;line-height:1.7"><b>10/22(목) 오전 10:30 · 10/24(토) 오후 1:30</b> · 프라임K수학 강의실 <span style="color:#b5523f">(10/13 일정 1주 연기 — 아래 문안은 연기 안내)</span><br>
     <a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${SM_CHECK}" target="_blank" rel="noopener">📋 신청 현황 보기</a>
