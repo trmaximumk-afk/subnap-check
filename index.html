@@ -307,7 +307,8 @@ function renderSeminarText(d){
   h += `<div class="card" style="font-size:12.5px;line-height:1.7"><b>10/22(목) 오전 10:30 유튜브 라이브</b> (더루멘 교육콘텐츠제작소 채널)<br><b>10/24(토) 오후 1:30 프라임K수학 강의실</b> (그대로)<br>
     <a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${SM_CHECK}" target="_blank" rel="noopener">📋 신청 현황 보기</a>
     ${d.live_url?`<a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${esc(d.live_url)}" target="_blank" rel="noopener">▶ 라이브 링크 확인</a>`:""}
-    <div style="margin-top:8px;color:#98a">발송법: <b>📩 문자 보내기</b>를 누르면 문자앱이 받는 번호와 본문이 채워진 채로 열립니다. 전송만 누르세요(누르는 순간 발송 표시). 이번 안내는 글만 보냅니다. 카드뉴스에는 목요일도 강의실로 적혀 있어 붙이지 않습니다.<br>
+    ${(d.cards||[]).length?`<button class="btn-nav" style="margin-top:6px" onclick="smShareCards()">🖼 카드뉴스만 보내기 (${d.cards.length}장)</button>`:""}
+    <div style="margin-top:8px;color:#98a">발송법: <b>📩 문자 보내기</b>를 누르면 문자앱이 받는 번호와 본문이 채워진 채로 열립니다. 전송만 누르세요(누르는 순간 발송 표시). 카드뉴스(목요일 유튜브 라이브 표기판)도 보내려면 문자를 보낸 뒤 <b>🖼 카드뉴스만</b>으로 이어서 보내세요.<br>
     목요일 아침 링크 알림은 <b>📋 신청 현황 보기</b> → 문안에서 <b>목요일 아침 링크 알림</b>을 골라 1회차 신청자에게 💬 문자로 보내세요.</div></div>`;
   const g=d.general;
   if(g){
@@ -315,6 +316,7 @@ function renderSeminarText(d){
       <div style="font-size:11.5px;margin:6px 0;color:#b5523f">(광고) 표기·수신거부 문구 포함 — 밤 9시~아침 8시에는 보내지 마세요</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn-nav" onclick="smShareGenText()">📤 문안 보내기</button>
+        ${(d.cards||[]).length?`<button class="btn-nav" onclick="smShareGen()">🖼 카드뉴스+문안</button>`:""}
         <button class="btn-nav" onclick="smCopyGen()">📋 복사</button>
       </div>
       <details style="margin-top:6px"><summary style="font-size:11px;color:#98a;cursor:pointer">문안 보기</summary><div style="white-space:pre-wrap;font-size:12px;line-height:1.6;margin-top:6px;padding:8px;border-radius:8px;background:rgba(127,127,127,.08)">${esc(g.msg)}</div></details>
@@ -331,6 +333,7 @@ function renderSeminarText(d){
         <div style="font-size:12px;margin:6px 0">${ok?"✅ 발송함":"⬜ 미발송"}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn-nav" onclick="smSms('${f.id}')">📩 문자 보내기</button>
+          ${(d.cards||[]).length?`<button class="btn-nav" onclick="smShareCards('${f.id}')">🖼 카드뉴스만</button>`:""}
           <button class="btn-nav" onclick="smCopy('${f.id}')">📋 복사</button>
           <button class="btn-nav" onclick="smMark('${f.id}')">${ok?"↩ 발송 취소":"✔ 발송 표시"}</button>
         </div>
