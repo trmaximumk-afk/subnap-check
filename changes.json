@@ -1,24 +1,12 @@
 {
-  "date": "2026-10-21",
+  "date": "2026-10-22",
   "generated_at": "05:00",
   "summary": {
     "new": 0,
-    "withdrawn": 1,
+    "withdrawn": 0,
     "changed": 0
   },
-  "changes": [
-    {
-      "name": "한성용",
-      "kind": "withdrawn",
-      "label": "퇴원",
-      "detail": "중3 대전중앙중학교"
-    }
-  ],
-  "excel_mismatch": [
-    {
-      "name": "한성용",
-      "detail": "엑셀 명단인데 통통통 재원생 아님"
-    }
-  ],
-  "excel_generated": "프라임K수학_시간표학생배치_최신_20261021.xlsx"
+  "changes": [],
+  "excel_mismatch": [],
+  "excel_generated": null
 }
