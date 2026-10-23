@@ -229,7 +229,7 @@ function renderChuseok(){
 
 /* ── 설명회 초청 탭 (시즌 한정 — SM_UNTIL 지나면 탭 자동 숨김, 2026-10-03) ──
    seminar_msg.json: 가정별 문안(전화번호 없음) + 카드뉴스 경로. 번호는 students.json에서 찾는다. */
-const SM_UNTIL = "2026-10-24";
+const SM_UNTIL = "2026-10-28"; /* 10/23 토요일 취소·영상 대체 문자 발송용으로 연장 */
 const SM_CHECK = "https://trmaximumk-afk.github.io/prime-k-math/seminar-check.html";
 function smActive(){ const d=daysUntil(SM_UNTIL); return d!=null && d>=0; }
 function smKey(fid){ const r=(DB.seminar&&DB.seminar.round)||""; return "sm_sent_"+(r?r+"_":"")+fid; }
@@ -303,13 +303,19 @@ const SM_GROUPS=[
   {g:"sat", t:"토요일 신청 가정", s:"토요일은 그대로, 목요일 라이브도 볼 수 있다는 안내"}
 ];
 function renderSeminarText(d){
-  let h = `<h2 class="sec"><span class="dot"></span>설명회 안내 · 목요일 유튜브 라이브 전환</h2>`;
-  h += `<div class="card" style="font-size:12.5px;line-height:1.7"><b>10/22(목) 오전 10:30 유튜브 라이브</b> (더루멘 교육콘텐츠제작소 채널)<br><b>10/24(토) 오후 1:30 프라임K수학 강의실</b> (그대로)<br>
+  /* 제목·안내·발송법·그룹은 seminar_msg.json(title·info·howto·groups)에서 읽는다 — 회차가 바뀌어도 json만 고치면 됨 (10/23) */
+  const br=t=>esc(t||"").replace(/\n/g,"<br>");
+  const groups=(d.groups&&d.groups.length)?d.groups:SM_GROUPS;
+  let h = `<h2 class="sec"><span class="dot"></span>${esc(d.title||"설명회 안내")}</h2>`;
+  h += `<div class="card" style="font-size:12.5px;line-height:1.7">${d.info?`<b>${br(d.info)}</b><br>`:""}
     <a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${SM_CHECK}" target="_blank" rel="noopener">📋 신청 현황 보기</a>
-    ${d.live_url?`<a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${esc(d.live_url)}" target="_blank" rel="noopener">▶ 라이브 링크 확인</a>`:""}
+    ${d.video_url?`<a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${esc(d.video_url)}" target="_blank" rel="noopener">▶ 설명회 영상 확인</a>`:(d.live_url?`<a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${esc(d.live_url)}" target="_blank" rel="noopener">▶ 라이브 링크 확인</a>`:"")}
     ${(d.cards||[]).length?`<button class="btn-nav" style="margin-top:6px" onclick="smShareCards()">🖼 카드뉴스만 보내기 (${d.cards.length}장)</button>`:""}
-    <div style="margin-top:8px;color:#98a">발송법: <b>📩 문자 보내기</b>를 누르면 문자앱이 받는 번호와 본문이 채워진 채로 열립니다. 전송만 누르세요(누르는 순간 발송 표시). 카드뉴스(목요일 유튜브 라이브 표기판)도 보내려면 문자를 보낸 뒤 <b>🖼 카드뉴스만</b>으로 이어서 보내세요.<br>
-    목요일 아침 링크 알림은 <b>📋 신청 현황 보기</b> → 문안에서 <b>목요일 아침 링크 알림</b>을 골라 1회차 신청자에게 💬 문자로 보내세요.</div></div>`;
+    <div style="margin-top:8px;color:#98a">${br(d.howto||"발송법: 📩 문자 보내기를 누르면 문자앱이 받는 번호와 본문이 채워진 채로 열립니다. 전송만 누르세요(누르는 순간 발송 표시).")}</div></div>`;
+  if(d.external_note){
+    h += `<div class="card" style="font-size:12.5px;line-height:1.7;border:2px solid #b5523f"><b>외부 신청자</b><br>${br(d.external_note)}<br>
+      <a class="btn-nav" style="display:inline-block;margin-top:6px;text-decoration:none" href="${SM_CHECK}" target="_blank" rel="noopener">📋 신청 현황 보기</a></div>`;
+  }
   const g=d.general;
   if(g){
     h += `<div class="card" style="border:2px solid #1C9AA0"><b>📢 ${esc(g.label)}</b> <span style="font-size:11px;color:#98a">지인·외부 학부모 · 단톡방 · 커뮤니티</span>
@@ -324,7 +330,7 @@ function renderSeminarText(d){
   }
   const sent=d.families.filter(f=>localStorage.getItem(smKey(f.id))).length;
   h += `<div style="font-size:12px;color:#98a;margin:4px 2px 8px">재원생 ${d.families.length}가정 중 ${sent}가정 발송 표시</div>`;
-  SM_GROUPS.forEach(G=>{
+  groups.forEach(G=>{
     const fs=d.families.filter(f=>(f.group||"none")===G.g); if(!fs.length) return;
     h += `<div style="margin:14px 2px 6px"><b style="font-size:13.5px">${G.t} ${fs.length}</b> <span style="font-size:11.5px;color:#98a">${G.s}</span></div>`;
     fs.forEach(f=>{
