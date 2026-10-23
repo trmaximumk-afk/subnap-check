@@ -1,12 +1,24 @@
 {
-  "date": "2026-10-23",
+  "date": "2026-10-24",
   "generated_at": "05:00",
   "summary": {
-    "new": 0,
+    "new": 1,
     "withdrawn": 0,
     "changed": 0
   },
-  "changes": [],
-  "excel_mismatch": [],
-  "excel_generated": null
+  "changes": [
+    {
+      "name": "한성용",
+      "kind": "new",
+      "label": "신입",
+      "detail": "중3 대전중앙중학교"
+    }
+  ],
+  "excel_mismatch": [
+    {
+      "name": "한성용",
+      "detail": "통통통 재원생인데 엑셀 명단에 없음"
+    }
+  ],
+  "excel_generated": "프라임K수학_시간표학생배치_최신_20261024.xlsx"
 }
