@@ -1,25 +1,12 @@
 {
-  "date": "2026-10-26",
-  "generated_at": "15:16",
+  "date": "2026-10-27",
+  "generated_at": "05:00",
   "summary": {
-    "new": 2,
+    "new": 0,
     "withdrawn": 0,
     "changed": 0
   },
-  "changes": [
-    {
-      "name": "정연우",
-      "kind": "new",
-      "label": "신입",
-      "detail": "고2 호수돈여자고등학교"
-    },
-    {
-      "name": "최율희",
-      "kind": "new",
-      "label": "신입",
-      "detail": "고1 보문고등학교"
-    }
-  ],
+  "changes": [],
   "excel_mismatch": [],
   "excel_generated": null
 }
