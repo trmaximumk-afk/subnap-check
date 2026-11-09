@@ -1167,6 +1167,7 @@ function renderApply(){
     <div class="btn-row" style="margin-bottom:12px"><button class="btn btn-nav" onclick="waRefresh(this)">새로고침</button><button class="btn btn-outline" onclick="window.open(WA_PAGE,'_blank')">신청서 페이지</button></div>`;
   if(WA.err==="nokey") return h + waKeyBox("신청 목록을 보려면 확인 키가 필요합니다");
   if(WA.err==="auth") return h + waKeyBox("확인 키가 맞지 않습니다. 다시 넣어 주세요");
+  if(WA.err==="locked") return h + `<div class="empty">확인 키를 여러 번 틀려 10분 동안 잠겼습니다.<br><span style="font-size:12px">10분 뒤 새로고침을 눌러 주세요.</span></div>` + waKeyBox("잠금이 풀린 뒤 키를 다시 넣어 주세요");
   if(WA.err==="net") h += `<div class="hint" style="margin:0 2px 10px;color:#d64545">인터넷 연결 문제로 최신 목록을 불러오지 못했습니다.</div>`;
   if(!WA.rows) return h + `<div class="empty">${WA.err?"목록을 불러오지 못했습니다. 새로고침을 눌러 주세요.":"불러오는 중…"}</div>`;
   if(!WA.rows.length) return h + `<div class="empty">아직 들어온 신청이 없습니다.<br><span style="font-size:12px">신청이 들어오면 홈 화면 맨 위와 이 탭에 빨간 숫자로 알려 드립니다.</span></div>`;
@@ -1176,7 +1177,7 @@ function renderApply(){
 }
 function waKeep(){ const y=window.scrollY; render(); window.scrollTo(0,y); }
 async function waRefresh(btn){ if(btn) btn.disabled=true; await waLoad(); waPrevNew=waNew().length; waKeep(); toast(WA.rows?"최신 목록입니다":"불러오지 못했습니다"); }
-async function waSaveKey(){ const v=($("waKeyIn")||{}).value; if(!v||!v.trim()) return toast("키를 넣어 주세요"); localStorage.setItem("winter_admin_key", v.trim()); await waLoad(); waPrevNew=waNew().length; render(); toast(WA.rows?"키 저장 · 목록을 불러왔습니다":"키가 맞지 않습니다"); }
+async function waSaveKey(){ const v=($("waKeyIn")||{}).value; if(!v||!v.trim()) return toast("키를 넣어 주세요"); localStorage.setItem("winter_admin_key", v.trim()); await waLoad(); waPrevNew=waNew().length; render(); toast(WA.rows?"키 저장 · 목록을 불러왔습니다":WA.err==="locked"?"여러 번 틀려 10분 동안 잠겼습니다":"키가 맞지 않습니다"); }
 async function waSet(id, st){
   const r=waFind(id); if(!r || r.status===st) return;
   try{
