@@ -91,6 +91,23 @@
   .modal .mbody{ background:#f8f8fc; border-radius:12px; padding:14px; font-size:13.5px; line-height:1.7; white-space:pre-wrap; margin-bottom:14px; max-height:44vh; overflow:auto; }
   .modal .close{ float:right; background:#f0f0f5; border:none; border-radius:9px; width:30px; height:30px; font-size:15px; cursor:pointer; color:#888; }
   .hint{ font-size:11.5px; color:var(--muted); line-height:1.5; margin-top:6px; }
+  /* 겨울특강 참가신청 */
+  .tabbar .ic svg{ width:20px; height:20px; display:block; margin:0 auto; }
+  .wa-it.wa-new{ border-color:#f1b7b7; box-shadow:inset 3px 0 0 #d64545, 0 1px 4px rgba(0,0,0,.04); }
+  .wa-kv{ display:flex; gap:10px; font-size:13.5px; margin-top:6px; }
+  .wa-kv span{ color:var(--muted); width:62px; flex:none; }
+  .wa-kv b{ font-weight:700; }
+  .wa-kv a{ color:#b8862a; font-weight:800; text-decoration:none; }
+  .wa-q{ margin-top:8px; background:#f8f8fc; border-radius:10px; padding:9px 11px; font-size:13.5px; line-height:1.6; white-space:pre-wrap; }
+  .wa-memo{ margin-top:6px; font-size:12.5px; color:#8a4d0f; background:#fff8e6; border-radius:8px; padding:6px 9px; }
+  .wa-seg{ display:flex; gap:4px; margin-top:8px; background:#f2f2f7; border-radius:10px; padding:3px; }
+  .wa-seg button{ flex:1; border:0; background:none; border-radius:8px; padding:7px 0; font-family:inherit; font-size:12.5px; font-weight:700; color:#777; cursor:pointer; }
+  .wa-seg button.on{ background:#fff; color:var(--navy); box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  .wa-sum{ display:flex; justify-content:space-between; font-size:15px; font-weight:700; }
+  .wa-sum span{ font-weight:800; }
+  .wa-sub{ font-size:12.5px; color:var(--muted); margin-top:3px; }
+  .wa-pg{ display:inline-block; padding:3px 9px; border-radius:20px; font-size:11.5px; font-weight:700; line-height:1.45; }
+  .wa-pg.s{ background:#e3f2f1; color:#0b5d66; } .wa-pg.m{ background:#fcefd6; color:#8a4d0f; }
 </style>
 </head>
 <body>
@@ -118,6 +135,7 @@ const REPO = "trmaximumk-afk/subnap-check";
 const FILES = { payment:"data.json", students:"students.json", exams:"exams.json", changes:"changes.json", timetable:"timetable.json", alerts:"alerts.json", schedule:"schedule.json", notice:"notice.json", chuseok:"chuseok.json", seminar:"seminar_msg.json" };
 const TABS = [
   { id:"home",   ic:"🏠", lb:"홈" },
+  { id:"apply",  ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6l1 2h3v15H5v-15h3z"/><path d="M9 11h6M9 15h4"/></svg>', lb:"신청" },
   { id:"chuseok", ic:"🌕", lb:"추석" },
   { id:"seminar", ic:"📣", lb:"설명회" },
   { id:"roster", ic:"👥", lb:"현황" },
@@ -152,8 +170,9 @@ async function loadAll(){
 function render(){
   if(tab==="chuseok" && !csActive()) tab="home";
   if(tab==="seminar" && !smActive()) tab="home";
+  if(tab==="apply" && !waActive()) tab="home";
   renderTabbar();
-  const map = { home:renderHome, roster:renderRoster, pay:renderPay, book:renderBook, exam:renderExam, sched:renderSched, diff:renderDiff, chuseok:renderChuseok, seminar:renderSeminar };
+  const map = { home:renderHome, roster:renderRoster, pay:renderPay, book:renderBook, exam:renderExam, sched:renderSched, diff:renderDiff, chuseok:renderChuseok, seminar:renderSeminar, apply:renderApply };
   $("view").innerHTML = (map[tab]||renderHome)();
   if(tab==="book") initBook();
   if(tab==="exam" && $("exMaths") && !$("exMaths").children.length) addMathRow();
@@ -164,13 +183,14 @@ function go(t){ tab=t; render(); }
 
 function renderTabbar(){
   const chg = DB.changes && DB.changes.summary ? (DB.changes.summary.new+DB.changes.summary.withdrawn+DB.changes.summary.changed) : 0;
-  $("tabbar").innerHTML = TABS.filter(t=>(t.id!=="chuseok"||csActive())&&(t.id!=="seminar"||smActive())).map(t=>{
+  $("tabbar").innerHTML = TABS.filter(t=>(t.id!=="chuseok"||csActive())&&(t.id!=="seminar"||smActive())&&(t.id!=="apply"||waActive())).map(t=>{
     let badge="";
     if(t.id==="diff" && chg>0) badge=`<span class="badge">${chg}</span>`;
     if(t.id==="pay"){ const u=payUnpaidCount(); if(u>0) badge=`<span class="badge">${u}</span>`; }
     if(t.id==="sched"){ const n=schedAlertItems().length; if(n>0) badge=`<span class="badge">${n}</span>`; }
     if(t.id==="chuseok"){ const n=csUnsent(); if(n>0) badge=`<span class="badge">${n}</span>`; }
     if(t.id==="seminar"){ const n=smUnsent(); if(n>0) badge=`<span class="badge">${n}</span>`; }
+    if(t.id==="apply"){ const n=waNew().length; if(n>0) badge=`<span class="badge">${n}</span>`; }
     return `<button class="${tab===t.id?'on':''}" onclick="go('${t.id}')">${badge}<span class="ic">${t.ic}</span><span class="lb2">${t.lb}</span></button>`;
   }).join("");
 }
@@ -424,7 +444,7 @@ function renderHome(){
       (al.items||[]).slice(0,6).map(i=>`<div class="row"><div class="nm">${esc(i.name)} <small style="color:#8a8f98;font-weight:400">${esc(i.topic||"")}</small></div><div class="right"><span class="pill ${i.kind==='consult'?'o':'g'}">${i.kind==='consult'?'상담':'피드백'}</span><small style="margin-left:6px;color:#8a8f98">${esc(i.at||"")}</small></div></div>`).join("") +
       `</div><div class="btn-row" style="margin-top:8px"><button class="btn btn-primary" onclick="window.open('https://setech-search-x85r.vercel.app/admin','_blank')">🔗 세특검색기 관리자에서 처리</button></div>`;
   }
-  return `${alPrev}<h2 class="sec"><span class="dot"></span>오늘 요약</h2>${cards}${schedPrev}${exPrev}${chPrev}
+  return `${waHome()}${alPrev}<h2 class="sec"><span class="dot"></span>오늘 요약</h2>${cards}${schedPrev}${exPrev}${chPrev}
     <div class="btn-row" style="margin-top:18px">
       <button class="btn btn-primary" onclick="triggerReq('full_sync',this)">🔄 전체 동기화</button>
       <button class="btn btn-nav" onclick="go('pay')">💰 수납체크 열기</button>
@@ -1031,12 +1051,18 @@ function openSettings(){
     <input id="tokInput" type="password" placeholder="ghp_... 또는 github_pat_..." value="${esc(cur)}">
     <div class="hint">이 토큰은 <b>이 기기에만</b> 저장되며(localStorage) 저장소 소스에는 들어가지 않습니다.
       subnap-check 저장소 <b>contents 쓰기 전용</b> 파인그레인드 토큰을 권장합니다. 수동 버튼(수납 재발행·통통통 연동)에만 쓰입니다.</div>
+    <label class="lb" style="margin-top:14px">겨울특강 신청 확인 키</label>
+    <input id="waKeyInput" type="password" placeholder="원장님 확인 키" value="${esc(waKey())}">
+    <div class="hint">신청 탭의 목록을 여는 키입니다. 이 기기에만 저장됩니다.</div>
     <div class="btn-row" style="margin-top:14px">
       <button class="btn btn-outline" onclick="closeModal()">닫기</button>
       <button class="btn btn-primary" onclick="saveToken()">저장</button>
     </div>`);
 }
-function saveToken(){ const v=$("tokInput").value.trim(); if(v) localStorage.setItem("gh_write_token",v); else localStorage.removeItem("gh_write_token"); toast("저장됨"); closeModal(); }
+function saveToken(){ const v=$("tokInput").value.trim(); if(v) localStorage.setItem("gh_write_token",v); else localStorage.removeItem("gh_write_token");
+  const wk=$("waKeyInput")?$("waKeyInput").value.trim():null; const changed = wk!==null && wk!==waKey();
+  if(wk!==null){ if(wk) localStorage.setItem("winter_admin_key",wk); else localStorage.removeItem("winter_admin_key"); }
+  toast("저장됨"); closeModal(); if(changed) waLoad().then(()=>{ waPrevNew=waNew().length; render(); }); }
 
 function showModal(title, bodyText, buttons){
   const btns = buttons.map((b,i)=>`<button class="btn ${b.cls}" style="flex:1" onclick="__mb(${i})">${b.t}</button>`).join("");
@@ -1052,14 +1078,159 @@ function showModalHTML(title, html){
 function __mb(i){ window.__mbtns[i].fn(); }
 function closeModal(){ $("modalRoot").innerHTML=""; }
 
+/* ── 겨울특강 참가신청 (2026-11-09) ──
+   prime-k-math/winter.html#apply 신청서 → 온빛 Supabase primek_winter_applications.
+   목록은 원장 확인 키(이 기기 localStorage winter_admin_key)로만 열린다. 링크 #wk=키 로 한 번 열면 저장.
+   '새 신청' 상태 = 알림(홈 맨 위 + 신청 탭 배지 + 창 제목 숫자). 화면이 켜져 있으면 1분마다 다시 확인. */
+const WA_UNTIL = "2027-03-31";
+const WA_SB = "https://szyexqqofdtlfgeuvsub.supabase.co", WA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6eWV4cXFvZmR0bGZnZXV2c3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjQyMzMsImV4cCI6MjA5NzcwMDIzM30.iTz8HPo-qEGSKRQHQObkKeu5OuveJtldzKtciqxpZTI";
+const WA_PAGE = "https://trmaximumk-afk.github.io/prime-k-math/winter.html#apply";
+const WA_ST = ["새 신청","연락함","등록","취소"];
+let WA = { rows:null, err:null, at:null };
+let waPrevNew = null;
+function waActive(){ const d=daysUntil(WA_UNTIL); return d!=null && d>=0; }
+function waKey(){ try{ return localStorage.getItem("winter_admin_key")||""; }catch(e){ return ""; } }
+function waNew(){ return (WA.rows||[]).filter(r=>r.status==="새 신청"); }
+async function waRpc(fn, body){
+  const r = await fetch(WA_SB+"/rest/v1/rpc/"+fn, { method:"POST", headers:{ apikey:WA_ANON, Authorization:"Bearer "+WA_ANON, "Content-Type":"application/json" }, body:JSON.stringify(body) });
+  return r.json();
+}
+async function waLoad(){
+  if(!waActive()) return;
+  const k=waKey(); if(!k){ WA={ rows:null, err:"nokey", at:null }; waTitle(); return; }
+  try{
+    const r = await waRpc("primek_winter_admin_list", { p_key:k });
+    WA = (r && r.ok) ? { rows:r.rows||[], err:null, at:new Date() } : { rows:null, err:(r&&r.error)||"fail", at:null };
+  }catch(e){ WA = { rows:WA.rows, err:"net", at:WA.at }; }
+  waTitle();
+}
+function waTitle(){ const n=waNew().length; document.title=(n?`(${n}) `:"")+"프라임K 교적 대시보드"; }
+function waWhen(ts){ if(!ts) return ""; const d=new Date(ts); return `${d.getMonth()+1}/${d.getDate()}(${"일월화수목금토"[d.getDay()]}) ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
+function waAgo(ts){ const m=Math.round((Date.now()-new Date(ts))/60000); if(m<1) return "방금"; if(m<60) return m+"분 전"; const h=Math.round(m/60); if(h<24) return h+"시간 전"; return Math.round(h/24)+"일 전"; }
+function waProgShort(r){ return [r.want_sci?"통합과학":"", r.want_mr?"미라클 7":""].filter(Boolean).join(" + "); }
+function waProg(r){
+  const a=[];
+  if(r.want_sci) a.push(`<span class="wa-pg s">통합과학 · 12월 ${esc(r.sci_dec||"미정")} · 1·2월 ${esc(r.sci_jf||"미정")}${r.sci_pay&&r.sci_pay!=="상담 후 결정"?" · "+esc(r.sci_pay):""}</span>`);
+  if(r.want_mr) a.push(`<span class="wa-pg m">미라클 7 · ${esc(r.mr_class||"미정")}</span>`);
+  return a.join("");
+}
+function waFind(id){ return (WA.rows||[]).find(r=>r.id===id)||null; }
+function waHome(){
+  if(!waActive()) return "";
+  if(WA.err==="nokey") return `<div class="card" style="border-color:#f1dfb0;background:#fffaf0"><div style="font-weight:800">겨울특강 참가신청 알림</div><div class="hint" style="margin-top:4px">이 기기에서 신청 알림을 보려면 확인 키를 한 번 넣어 주세요.</div><div class="btn-row" style="margin-top:8px"><button class="btn btn-outline" onclick="go('apply')">키 넣기</button></div></div>`;
+  const nw=waNew(); if(!nw.length) return "";
+  return `<h2 class="sec"><span class="dot" style="background:#d64545"></span>겨울특강 새 신청 <span class="pill r" style="margin-left:6px">${nw.length}건</span></h2><div class="card">` +
+    nw.slice(0,6).map(r=>`<div class="row" onclick="go('apply')" style="cursor:pointer"><div><div class="nm">${esc(r.student_name)} <small style="color:#8a8f98;font-weight:500">${esc(r.grade)} · ${esc(r.school)}</small></div><div class="sub">${waProgShort(r)} · ${esc(r.relation)}</div></div><div class="right">${waAgo(r.submitted_at)}</div></div>`).join("") +
+    `</div><div class="btn-row" style="margin:8px 0 6px"><button class="btn btn-primary" onclick="go('apply')">신청 탭에서 확인하기</button></div>`;
+}
+function waSummary(rows){
+  const live=rows.filter(r=>r.status!=="취소"), sci=live.filter(r=>r.want_sci), mr=live.filter(r=>r.want_mr);
+  const c=(arr,k,v)=>arr.filter(r=>(r[k]||"상담 후 결정")===v).length;
+  return `<div class="card" style="padding:12px 14px">
+    <div class="wa-sum"><span style="color:#0b5d66">통합과학1·2 겨울특강</span><span>${sci.length}명</span></div>
+    <div class="wa-sub">12월 · 토요반 ${c(sci,"sci_dec","토요반")} · 일요반 ${c(sci,"sci_dec","일요반")} · 미정 ${c(sci,"sci_dec","상담 후 결정")}</div>
+    <div class="wa-sub">1·2월 · 월수금반 ${c(sci,"sci_jf","월수금반")} · 화목금반 ${c(sci,"sci_jf","화목금반")} · 미정 ${c(sci,"sci_jf","상담 후 결정")}</div>
+    <div class="wa-sum" style="margin-top:9px"><span style="color:#8a4d0f">맥시멈K 미라클 7</span><span>${mr.length}명</span></div>
+    <div class="wa-sub">종일 ${c(mr,"mr_class","종일")} · 오전반 ${c(mr,"mr_class","오전반")} · 미정 ${c(mr,"mr_class","상담 후 결정")}</div>
+    <div class="hint">취소는 빼고 센 숫자입니다. 과학특강 정원은 반별 5명입니다.</div></div>`;
+}
+function waItem(r){
+  const stCls={ "새 신청":"r", "연락함":"o", "등록":"g", "취소":"n" }[r.status]||"n";
+  return `<div class="card wa-it ${r.status==="새 신청"?"wa-new":""}">
+    <div style="display:flex;align-items:flex-start;gap:8px">
+      <div><div style="font-size:16px;font-weight:800">${esc(r.student_name)} <small style="font-weight:600;color:var(--muted)">${esc(r.grade)} · ${esc(r.school)}</small></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${waWhen(r.submitted_at)} · ${waAgo(r.submitted_at)}${r.submit_count>1?` · 다시 보냄(${r.submit_count}번째)`:""}${r.source&&r.source!=="web"?` · 경로 ${esc(r.source)}`:""}</div></div>
+      <span class="pill ${stCls}" style="margin-left:auto;flex:none">${esc(r.status)}</span>
+    </div>
+    <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px">${waProg(r)}<span class="pill n">${esc(r.relation)}</span></div>
+    <div class="wa-kv"><span>학부모</span><b>${r.parent_name?esc(r.parent_name)+" · ":""}<a href="tel:${esc(r.parent_phone)}">${fmtPhone(r.parent_phone)}</a></b></div>
+    ${r.student_phone?`<div class="wa-kv"><span>학생</span><b><a href="tel:${esc(r.student_phone)}">${fmtPhone(r.student_phone)}</a></b></div>`:""}
+    ${r.contact_time?`<div class="wa-kv"><span>상담 시간</span><b>${esc(r.contact_time)}</b></div>`:""}
+    ${r.question?`<div class="wa-q">${esc(r.question)}</div>`:""}
+    ${r.admin_memo?`<div class="wa-memo">메모 · ${esc(r.admin_memo)}</div>`:""}
+    <div class="btn-row" style="margin-top:10px">
+      <a class="btn btn-nav" style="text-decoration:none;padding:10px 0" href="tel:${esc(r.parent_phone)}">전화</a>
+      <button class="btn btn-outline" style="padding:8px 0" onclick="waSms(${r.id})">문자</button>
+      <button class="btn btn-outline" style="padding:8px 0" onclick="waMemo(${r.id})">메모</button>
+    </div>
+    <div class="wa-seg">${WA_ST.map(st=>`<button class="${r.status===st?"on":""}" onclick="waSet(${r.id},'${st}')">${st}</button>`).join("")}</div>
+  </div>`;
+}
+function waKeyBox(msg){
+  return `<div class="card"><div style="font-weight:800;margin-bottom:8px">${msg}</div>
+    <input id="waKeyIn" type="password" placeholder="원장님 확인 키" autocomplete="off">
+    <div class="btn-row" style="margin-top:10px"><button class="btn btn-primary" onclick="waSaveKey()">저장하고 불러오기</button></div>
+    <div class="hint">원장님용 링크를 이 기기에서 한 번 열면 키가 저절로 저장됩니다. 키는 이 기기에만 저장됩니다.</div></div>`;
+}
+function renderApply(){
+  let h = `<h2 class="sec"><span class="dot"></span>겨울특강 참가신청${WA.rows?` <span style="font-weight:500;font-size:12px;color:var(--muted)">· ${WA.rows.length}건${WA.at?" · "+waWhen(WA.at)+" 확인":""}</span>`:""}</h2>
+    <div class="btn-row" style="margin-bottom:12px"><button class="btn btn-nav" onclick="waRefresh(this)">새로고침</button><button class="btn btn-outline" onclick="window.open(WA_PAGE,'_blank')">신청서 페이지</button></div>`;
+  if(WA.err==="nokey") return h + waKeyBox("신청 목록을 보려면 확인 키가 필요합니다");
+  if(WA.err==="auth") return h + waKeyBox("확인 키가 맞지 않습니다. 다시 넣어 주세요");
+  if(WA.err==="net") h += `<div class="hint" style="margin:0 2px 10px;color:#d64545">인터넷 연결 문제로 최신 목록을 불러오지 못했습니다.</div>`;
+  if(!WA.rows) return h + `<div class="empty">${WA.err?"목록을 불러오지 못했습니다. 새로고침을 눌러 주세요.":"불러오는 중…"}</div>`;
+  if(!WA.rows.length) return h + `<div class="empty">아직 들어온 신청이 없습니다.<br><span style="font-size:12px">신청이 들어오면 홈 화면 맨 위와 이 탭에 빨간 숫자로 알려 드립니다.</span></div>`;
+  h += waSummary(WA.rows);
+  WA_ST.forEach(st=>{ const list=WA.rows.filter(r=>r.status===st); if(list.length) h += `<div class="grade-h">${st} (${list.length})</div>` + list.map(waItem).join(""); });
+  return h;
+}
+function waKeep(){ const y=window.scrollY; render(); window.scrollTo(0,y); }
+async function waRefresh(btn){ if(btn) btn.disabled=true; await waLoad(); waPrevNew=waNew().length; waKeep(); toast(WA.rows?"최신 목록입니다":"불러오지 못했습니다"); }
+async function waSaveKey(){ const v=($("waKeyIn")||{}).value; if(!v||!v.trim()) return toast("키를 넣어 주세요"); localStorage.setItem("winter_admin_key", v.trim()); await waLoad(); waPrevNew=waNew().length; render(); toast(WA.rows?"키 저장 · 목록을 불러왔습니다":"키가 맞지 않습니다"); }
+async function waSet(id, st){
+  const r=waFind(id); if(!r || r.status===st) return;
+  try{
+    const res = await waRpc("primek_winter_admin_update", { p_key:waKey(), p_id:id, p_status:st, p_memo:null });
+    if(res && res.ok){ r.status=st; waPrevNew=waNew().length; waTitle(); waKeep(); toast(`${r.student_name} · ${st}`); }
+    else toast("바꾸지 못했습니다 ("+((res&&res.error)||"오류")+")");
+  }catch(e){ toast("네트워크 오류"); }
+}
+function waMemo(id){
+  const r=waFind(id); if(!r) return;
+  showModalHTML(r.student_name+" 메모", `<textarea id="waMemoIn" rows="4" maxlength="300" placeholder="상담 내용, 반 배정 메모">${esc(r.admin_memo||"")}</textarea>
+    <div class="btn-row" style="margin-top:12px"><button class="btn btn-outline" onclick="closeModal()">닫기</button><button class="btn btn-primary" onclick="waMemoSave(${id})">저장</button></div>`);
+}
+async function waMemoSave(id){
+  const r=waFind(id); const v=$("waMemoIn").value;
+  try{
+    const res = await waRpc("primek_winter_admin_update", { p_key:waKey(), p_id:id, p_status:null, p_memo:v });
+    if(res && res.ok){ r.admin_memo=v.trim()||null; closeModal(); waKeep(); toast("메모 저장"); } else toast("저장하지 못했습니다");
+  }catch(e){ toast("네트워크 오류"); }
+}
+function waSms(id){
+  const r=waFind(id); if(!r) return;
+  const msg=`안녕하세요, 프라임K수학 김범수 원장입니다. ${r.student_name} 학생 2027 겨울 프로그램(${waProgShort(r)}) 참가신청서 잘 받았습니다. 상담 일정 잡으려고 연락드립니다.`;
+  copy(msg); const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+  toast("문안 복사 → 문자앱"); setTimeout(()=>{ location.href=`sms:${r.parent_phone}${ios?"&":"?"}body=${encodeURIComponent(msg)}`; },300);
+}
+async function waPoll(){
+  if(!waActive() || !waKey() || document.visibilityState!=="visible") return;
+  await waLoad();
+  const n=waNew().length;
+  if(waPrevNew!=null && n>waPrevNew) toast(`겨울특강 새 신청 ${n-waPrevNew}건이 들어왔습니다`);
+  waPrevNew=n;
+  if(document.querySelector("#modalRoot .overlay") || (document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))){ renderTabbar(); return; }
+  if(tab==="home" || tab==="apply") waKeep(); else renderTabbar();
+}
+(function(){ /* 원장님용 링크 #wk=키 → 이 기기에 저장하고 주소에서 지움 */
+  const m=location.hash.match(/[#&]wk=([^&]+)/);
+  if(m){ try{ localStorage.setItem("winter_admin_key", decodeURIComponent(m[1])); }catch(e){} history.replaceState(null,"",location.pathname+location.search); window.__waSaved=true; }
+  window.addEventListener("hashchange", ()=>{ if(/[#&]wk=/.test(location.hash)) location.reload(); });
+})();
+
 function errBox(f){ return `<div class="empty">⚠️ ${esc(f)} 를 불러올 수 없습니다.<br><span style="font-size:12px">아직 생성되지 않았을 수 있습니다.</span></div>`; }
 
 (async function(){
   const d=new Date();
   $("hDate").textContent = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-  await loadAll();
+  await Promise.all([loadAll(), waLoad()]);
+  waPrevNew = waNew().length;
   if(DB.students) $("hUpd").textContent = "명단 "+(DB.students.updated_at||"");
+  if(window.__waSaved && waActive()) tab="apply";
   render();
+  if(window.__waSaved) toast(WA.rows?"신청 확인 키를 이 기기에 저장했습니다":"키가 맞지 않습니다");
+  setInterval(waPoll, 60000);
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") waPoll(); });
 })();
 </script>
 </body>
