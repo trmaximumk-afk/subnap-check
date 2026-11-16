@@ -132,7 +132,7 @@
 
 <script>
 const REPO = "trmaximumk-afk/subnap-check";
-const FILES = { payment:"data.json", students:"students.json", exams:"exams.json", changes:"changes.json", timetable:"timetable.json", alerts:"alerts.json", schedule:"schedule.json", notice:"notice.json", chuseok:"chuseok.json", seminar:"seminar_msg.json" };
+const FILES = { payment:"data.json", students:"students.json", exams:"exams.json", changes:"changes.json", timetable:"timetable.json", alerts:"alerts.json", schedule:"schedule.json", notice:"notice.json", chuseok:"chuseok.json", seminar:"seminar_msg.json", wmsg:"winter_msg.json" };
 const TABS = [
   { id:"home",   ic:"🏠", lb:"홈" },
   { id:"apply",  ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6l1 2h3v15H5v-15h3z"/><path d="M9 11h6M9 15h4"/></svg>', lb:"신청" },
@@ -1185,9 +1185,85 @@ function waKeyBox(msg){
     <div class="btn-row" style="margin-top:10px"><button class="btn btn-primary" onclick="waSaveKey()">저장하고 불러오기</button></div>
     <div class="hint">원장님용 링크를 이 기기에서 한 번 열면 키가 저절로 저장됩니다. 키는 이 기기에만 저장됩니다.</div></div>`;
 }
+/* ── 겨울특강 안내 문자 (2026-11-16 원장 "8명 따로, 대시보드에서 바로 보내기") ──
+   winter_msg.json(가정별 문안·학생 카톡, 번호 없음) ← ~/kteacher-video/work/tongsci/msg/make_winter_msg.py
+   번호는 students.json에서 smPhone(어머님→대표→아버님)으로 찾는다. 발송 표시는 이 기기 localStorage. */
+let wmOpen = null;   // null = 안 보낸 가정이 있으면 펼침
+function wmD(){ return DB.wmsg||null; }
+function wmFams(){ return (wmD()||{}).families||[]; }
+function wmKey(fid){ return "wm_sent_"+((wmD()||{}).round||"")+"_"+fid; }
+function wmSent(fid){ try{ return !!localStorage.getItem(wmKey(fid)); }catch(e){ return false; } }
+function wmFind(fid){ return wmFams().find(f=>f.id===fid)||null; }
+function wmKk(id){ return ((wmD()||{}).kakao||[]).find(k=>k.id===id)||null; }
+function wmNight(){ const h=new Date().getHours(); return h>=21 || h<8; }
+function wmToggle(){ wmOpen = !wmIsOpen(); waKeep(); }
+function wmIsOpen(){ return wmOpen==null ? wmFams().some(f=>!wmSent(f.id)) : wmOpen; }
+function wmMark(fid){ try{ const k=wmKey(fid); if(localStorage.getItem(k)) localStorage.removeItem(k); else localStorage.setItem(k,"1"); }catch(e){} waKeep(); }
+function wmSms(fid){
+  const f=wmFind(fid); if(!f) return; closeModal();
+  if(wmNight() && !confirm("지금은 밤 9시~아침 8시 사이입니다. 그래도 문자앱을 열까요?")) return;
+  const ph=(""+smPhone(f)).replace(/\D/g,"");
+  copy(f.msg);
+  if(!ph){ toast(f.label+" 번호 없음 — 문안만 복사했습니다"); return; }
+  try{ localStorage.setItem(wmKey(fid),"1"); }catch(e){}
+  const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+  toast(f.label+" 학부모님 문자앱 열기 (문안도 복사돼 있음)");
+  setTimeout(()=>{ location.href=`sms:${ph}${ios?'&':'?'}body=${encodeURIComponent(f.msg)}`; waKeep(); },300);
+}
+function wmView(fid){
+  const f=wmFind(fid); if(!f) return; const ph=smPhone(f);
+  showModal(f.label+" 학부모님 · "+(ph?fmtPhone(ph):"번호 없음"), f.msg, [
+    {t:"복사", cls:"btn-outline", fn:()=>{ copy(f.msg); toast("복사 완료"); }},
+    {t:"문자 보내기", cls:"btn-primary", fn:()=>wmSms(fid)} ]);
+}
+async function wmKkShare(id){
+  const k=wmKk(id); if(!k) return; await copy(k.msg); closeModal();
+  try{ if(navigator.share){ await navigator.share({text:k.msg}); toast("공유 완료"); } else toast("복사 완료 — 카톡에 붙여넣으세요"); }
+  catch(e){ if(!(""+e).includes("Abort")) toast("공유 취소 — 문안은 복사되어 있습니다"); }
+}
+function wmKkView(id){
+  const k=wmKk(id); if(!k) return;
+  showModal(k.label, k.msg, [
+    {t:"복사", cls:"btn-outline", fn:()=>{ copy(k.msg); toast("복사 완료"); }},
+    {t:"카톡 공유", cls:"btn-primary", fn:()=>wmKkShare(id)} ]);
+}
+function wmSection(){
+  const d=wmD(); if(!d||!wmFams().length) return "";
+  const all=wmFams(), sent=all.filter(f=>wmSent(f.id)).length, open=wmIsOpen();
+  let h = `<div class="card" style="border:2px solid #0e7c86">
+    <div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="wmToggle()">
+      <b style="font-size:15px">${esc(d.title||"안내 문자")}</b>
+      <span class="pill ${sent===all.length?"g":"o"}" style="margin-left:auto">보냄 ${sent}/${all.length}</span>
+      <span style="color:var(--muted);font-size:13px">${open?"▲":"▼"}</span></div>`;
+  if(!open) return h+`</div>`;
+  h += `<div class="hint" style="margin-top:6px"><b>보내기</b>를 누르면 학부모님 번호와 본문이 채워진 문자앱이 열립니다. 전송만 누르세요(누르는 순간 '보냄' 표시). 밤 9시~아침 8시에는 보내지 마세요.</div>`;
+  (d.groups||[]).forEach(G=>{
+    const fs=all.filter(f=>f.group===G.g); if(!fs.length) return;
+    h += `<div class="grade-h">${esc(G.t)} ${fs.length}가정 <span style="font-weight:500;color:var(--muted)">· ${esc(G.s||"")}</span></div>`;
+    fs.forEach(f=>{
+      const ok=wmSent(f.id), ph=smPhone(f);
+      h += `<div class="row" style="flex-wrap:wrap;gap:6px 10px">
+        <div style="min-width:0;flex:1"><div class="nm">${esc(f.label)} <span class="pill ${ok?"g":"n"}" style="font-size:10.5px;padding:2px 7px;vertical-align:2px">${ok?"보냄":"안 보냄"}</span></div>
+          <div class="sub">${esc(f.school||"")} · <span style="white-space:nowrap">${ph?fmtPhone(ph):"번호 없음"}</span>${f.note?" · "+esc(f.note):""}</div></div>
+        <div style="display:flex;gap:5px;flex:none">
+          <button class="btn btn-nav" style="padding:8px 10px;font-size:13px" onclick="wmSms('${esc(f.id)}')">보내기</button>
+          <button class="btn btn-outline" style="padding:6px 9px;font-size:13px" onclick="wmView('${esc(f.id)}')">문안</button>
+          <button class="btn btn-outline" style="padding:6px 9px;font-size:13px" onclick="wmMark('${esc(f.id)}')">${ok?"취소":"표시"}</button>
+        </div></div>`;
+    });
+    const k=wmKk(G.g);
+    if(k) h += `<div class="row" style="flex-wrap:wrap;gap:6px 10px;border-bottom:none">
+        <div style="min-width:0;flex:1"><div class="nm">${esc(k.label)}</div><div class="sub">${esc(k.s||"")}</div></div>
+        <div style="display:flex;gap:5px;flex:none">
+          <button class="btn btn-nav" style="padding:8px 10px;font-size:13px" onclick="wmKkShare('${esc(k.id)}')">카톡 공유</button>
+          <button class="btn btn-outline" style="padding:6px 9px;font-size:13px" onclick="wmKkView('${esc(k.id)}')">문안</button>
+        </div></div>`;
+  });
+  return h+`<div class="hint">표시 버튼은 다른 방법으로 보냈을 때 '보냄' 표시만 바꿉니다. 표시는 이 휴대폰에만 저장됩니다.</div></div>`;
+}
 function renderApply(){
   let h = `<h2 class="sec"><span class="dot"></span>겨울특강 참가신청${WA.rows?` <span style="font-weight:500;font-size:12px;color:var(--muted)">· ${WA.rows.length}건${WA.at?" · "+waWhen(WA.at)+" 확인":""}</span>`:""}</h2>
-    <div class="btn-row" style="margin-bottom:12px"><button class="btn btn-nav" onclick="waRefresh(this)">새로고침</button><button class="btn btn-outline" onclick="window.open(WA_PAGE,'_blank')">신청서 페이지</button></div>`;
+    <div class="btn-row" style="margin-bottom:12px"><button class="btn btn-nav" onclick="waRefresh(this)">새로고침</button><button class="btn btn-outline" onclick="window.open(WA_PAGE,'_blank')">신청서 페이지</button></div>` + wmSection();
   if(WA.err==="nokey") return h + waKeyBox("신청 목록을 보려면 확인 키가 필요합니다");
   if(WA.err==="auth") return h + waKeyBox("확인 키가 맞지 않습니다. 다시 넣어 주세요");
   if(WA.err==="locked") return h + `<div class="empty">확인 키를 여러 번 틀려 10분 동안 잠겼습니다.<br><span style="font-size:12px">10분 뒤 새로고침을 눌러 주세요.</span></div>` + waKeyBox("잠금이 풀린 뒤 키를 다시 넣어 주세요");
