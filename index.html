@@ -1187,77 +1187,100 @@ function waKeyBox(msg){
 }
 /* ── 겨울특강 안내 문자 (2026-11-16 원장 "8명 따로, 대시보드에서 바로 보내기") ──
    winter_msg.json(가정별 문안·학생 카톡, 번호 없음) ← ~/kteacher-video/work/tongsci/msg/make_winter_msg.py
-   번호는 students.json에서 smPhone(어머님→대표→아버님)으로 찾는다. 발송 표시는 이 기기 localStorage. */
-let wmOpen = null;   // null = 안 보낸 가정이 있으면 펼침
+   번호는 students.json에서 smPhone(어머님→대표→아버님)으로 찾는다. 발송 표시는 이 기기 localStorage.
+   같은 날 원장 "유튜브 재생목록 홍보, 문자 두 개로 끊어도 좋아" → 두 번째 문자 msg2(part "yt"):
+   학부모 = 자녀교육의 달인 재생목록, 학생 카톡 = 공부 응급실 재생목록. 보냄 표시는 따로(wm_sent_<round>_<이름>_yt). */
+let wmOpen = null;   // null = 안 보낸 문자가 있으면 펼침
 function wmD(){ return DB.wmsg||null; }
 function wmFams(){ return (wmD()||{}).families||[]; }
-function wmKey(fid){ return "wm_sent_"+((wmD()||{}).round||"")+"_"+fid; }
-function wmSent(fid){ try{ return !!localStorage.getItem(wmKey(fid)); }catch(e){ return false; } }
+function wmKey(fid,part){ return "wm_sent_"+((wmD()||{}).round||"")+"_"+fid+(part?"_"+part:""); }
+function wmSent(fid,part){ try{ return !!localStorage.getItem(wmKey(fid,part)); }catch(e){ return false; } }
 function wmFind(fid){ return wmFams().find(f=>f.id===fid)||null; }
 function wmKk(id){ return ((wmD()||{}).kakao||[]).find(k=>k.id===id)||null; }
+function wmTxt(o,part){ return part==="yt" ? (o.msg2||"") : o.msg; }
+function wmPartName(part){ return part==="yt" ? "유튜브 안내" : "특강 안내"; }
 function wmNight(){ const h=new Date().getHours(); return h>=21 || h<8; }
 function wmToggle(){ wmOpen = !wmIsOpen(); waKeep(); }
-function wmIsOpen(){ return wmOpen==null ? wmFams().some(f=>!wmSent(f.id)) : wmOpen; }
-function wmMark(fid){ try{ const k=wmKey(fid); if(localStorage.getItem(k)) localStorage.removeItem(k); else localStorage.setItem(k,"1"); }catch(e){} waKeep(); }
-function wmSms(fid){
-  const f=wmFind(fid); if(!f) return; closeModal();
+function wmIsOpen(){ return wmOpen==null ? wmFams().some(f=>!wmSent(f.id) || (f.msg2 && !wmSent(f.id,"yt"))) : wmOpen; }
+function wmMark(fid,part){ try{ const k=wmKey(fid,part); if(localStorage.getItem(k)) localStorage.removeItem(k); else localStorage.setItem(k,"1"); }catch(e){} waKeep(); }
+function wmSms(fid,part){
+  const f=wmFind(fid); if(!f) return; const txt=wmTxt(f,part); if(!txt) return; closeModal();
   if(wmNight() && !confirm("지금은 밤 9시~아침 8시 사이입니다. 그래도 문자앱을 열까요?")) return;
   const ph=(""+smPhone(f)).replace(/\D/g,"");
-  copy(f.msg);
+  copy(txt);
   if(!ph){ toast(f.label+" 번호 없음 — 문안만 복사했습니다"); return; }
-  try{ localStorage.setItem(wmKey(fid),"1"); }catch(e){}
+  try{ localStorage.setItem(wmKey(fid,part),"1"); }catch(e){}
   const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent);
-  toast(f.label+" 학부모님 문자앱 열기 (문안도 복사돼 있음)");
-  setTimeout(()=>{ location.href=`sms:${ph}${ios?'&':'?'}body=${encodeURIComponent(f.msg)}`; waKeep(); },300);
+  toast(f.label+" 학부모님 "+wmPartName(part)+" 문자앱 열기 (문안도 복사돼 있음)");
+  setTimeout(()=>{ location.href=`sms:${ph}${ios?'&':'?'}body=${encodeURIComponent(txt)}`; waKeep(); },300);
 }
-function wmView(fid){
-  const f=wmFind(fid); if(!f) return; const ph=smPhone(f);
-  showModal(f.label+" 학부모님 · "+(ph?fmtPhone(ph):"번호 없음"), f.msg, [
-    {t:"복사", cls:"btn-outline", fn:()=>{ copy(f.msg); toast("복사 완료"); }},
-    {t:"문자 보내기", cls:"btn-primary", fn:()=>wmSms(fid)} ]);
+function wmView(fid,part){
+  const f=wmFind(fid); if(!f) return; const ph=smPhone(f), txt=wmTxt(f,part);
+  showModal(f.label+" 학부모님 "+(part?"② ":"① ")+wmPartName(part)+" · "+(ph?fmtPhone(ph):"번호 없음"), txt, [
+    {t:"복사", cls:"btn-outline", fn:()=>{ copy(txt); toast("복사 완료"); }},
+    {t:"문자 보내기", cls:"btn-primary", fn:()=>wmSms(fid,part)} ]);
 }
-async function wmKkShare(id){
-  const k=wmKk(id); if(!k) return; await copy(k.msg); closeModal();
-  try{ if(navigator.share){ await navigator.share({text:k.msg}); toast("공유 완료"); } else toast("복사 완료 — 카톡에 붙여넣으세요"); }
+async function wmKkShare(id,part){
+  const k=wmKk(id); if(!k) return; const txt=wmTxt(k,part); if(!txt) return; await copy(txt); closeModal();
+  try{ if(navigator.share){ await navigator.share({text:txt}); toast("공유 완료"); } else toast("복사 완료 — 카톡에 붙여넣으세요"); }
   catch(e){ if(!(""+e).includes("Abort")) toast("공유 취소 — 문안은 복사되어 있습니다"); }
 }
-function wmKkView(id){
-  const k=wmKk(id); if(!k) return;
-  showModal(k.label, k.msg, [
-    {t:"복사", cls:"btn-outline", fn:()=>{ copy(k.msg); toast("복사 완료"); }},
-    {t:"카톡 공유", cls:"btn-primary", fn:()=>wmKkShare(id)} ]);
+function wmKkView(id,part){
+  const k=wmKk(id); if(!k) return; const txt=wmTxt(k,part);
+  showModal(k.label+" "+(part?"② ":"① ")+wmPartName(part), txt, [
+    {t:"복사", cls:"btn-outline", fn:()=>{ copy(txt); toast("복사 완료"); }},
+    {t:"카톡 공유", cls:"btn-primary", fn:()=>wmKkShare(id,part)} ]);
 }
+function wmPill(ok){ return `<span class="pill ${ok?"g":"n"}" style="font-size:10.5px;padding:2px 7px;vertical-align:2px">${ok?"보냄":"안 보냄"}</span>`; }
 function wmSection(){
   const d=wmD(); if(!d||!wmFams().length) return "";
   const all=wmFams(), sent=all.filter(f=>wmSent(f.id)).length, open=wmIsOpen();
+  const yts=all.filter(f=>f.msg2), ysent=yts.filter(f=>wmSent(f.id,"yt")).length;
+  const B1=`class="btn btn-nav" style="padding:8px 10px;font-size:13px"`, B2=`class="btn btn-outline" style="padding:6px 9px;font-size:13px"`;
+  const L2=`style="flex-basis:100%;display:flex;align-items:center;gap:5px;padding-top:6px;border-top:1px dashed var(--line,#e3e6ea)"`;
   let h = `<div class="card" style="border:2px solid #0e7c86">
-    <div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="wmToggle()">
+    <div style="display:flex;align-items:center;gap:6px;cursor:pointer;flex-wrap:wrap" onclick="wmToggle()">
       <b style="font-size:15px">${esc(d.title||"안내 문자")}</b>
-      <span class="pill ${sent===all.length?"g":"o"}" style="margin-left:auto">보냄 ${sent}/${all.length}</span>
-      <span style="color:var(--muted);font-size:13px">${open?"▲":"▼"}</span></div>`;
+      <span style="margin-left:auto;display:flex;gap:4px;align-items:center">
+        <span class="pill ${sent===all.length?"g":"o"}">① ${sent}/${all.length}</span>
+        ${yts.length?`<span class="pill ${ysent===yts.length?"g":"o"}">② 유튜브 ${ysent}/${yts.length}</span>`:""}
+        <span style="color:var(--muted);font-size:13px">${open?"▲":"▼"}</span></span></div>`;
   if(!open) return h+`</div>`;
-  h += `<div class="hint" style="margin-top:6px"><b>보내기</b>를 누르면 학부모님 번호와 본문이 채워진 문자앱이 열립니다. 전송만 누르세요(누르는 순간 '보냄' 표시). 밤 9시~아침 8시에는 보내지 마세요.</div>`;
+  h += `<div class="hint" style="margin-top:6px"><b>보내기</b>를 누르면 학부모님 번호와 본문이 채워진 문자앱이 열립니다. 전송만 누르세요(누르는 순간 '보냄' 표시). ${yts.length?"① 특강 안내를 보낸 뒤 ② 유튜브 안내도 한 통 더 보내 주세요. ":""}밤 9시~아침 8시에는 보내지 마세요.</div>`;
   (d.groups||[]).forEach(G=>{
     const fs=all.filter(f=>f.group===G.g); if(!fs.length) return;
     h += `<div class="grade-h">${esc(G.t)} ${fs.length}가정 <span style="font-weight:500;color:var(--muted)">· ${esc(G.s||"")}</span></div>`;
     fs.forEach(f=>{
-      const ok=wmSent(f.id), ph=smPhone(f);
+      const ok=wmSent(f.id), ok2=wmSent(f.id,"yt"), ph=smPhone(f), id=esc(f.id);
       h += `<div class="row" style="flex-wrap:wrap;gap:6px 10px">
-        <div style="min-width:0;flex:1"><div class="nm">${esc(f.label)} <span class="pill ${ok?"g":"n"}" style="font-size:10.5px;padding:2px 7px;vertical-align:2px">${ok?"보냄":"안 보냄"}</span></div>
+        <div style="min-width:0;flex:1"><div class="nm">${esc(f.label)} ${wmPill(ok)}</div>
           <div class="sub">${esc(f.school||"")} · <span style="white-space:nowrap">${ph?fmtPhone(ph):"번호 없음"}</span>${f.note?" · "+esc(f.note):""}</div></div>
         <div style="display:flex;gap:5px;flex:none">
-          <button class="btn btn-nav" style="padding:8px 10px;font-size:13px" onclick="wmSms('${esc(f.id)}')">보내기</button>
-          <button class="btn btn-outline" style="padding:6px 9px;font-size:13px" onclick="wmView('${esc(f.id)}')">문안</button>
-          <button class="btn btn-outline" style="padding:6px 9px;font-size:13px" onclick="wmMark('${esc(f.id)}')">${ok?"취소":"표시"}</button>
-        </div></div>`;
+          <button ${B1} onclick="wmSms('${id}')">보내기</button>
+          <button ${B2} onclick="wmView('${id}')">문안</button>
+          <button ${B2} onclick="wmMark('${id}')">${ok?"취소":"표시"}</button>
+        </div>
+        ${f.msg2?`<div ${L2}>
+          <span style="font-size:12.5px;font-weight:700;color:#0e7c86">② 유튜브</span> ${wmPill(ok2)}
+          <span style="margin-left:auto;display:flex;gap:5px">
+            <button ${B1} onclick="wmSms('${id}','yt')">보내기</button>
+            <button ${B2} onclick="wmView('${id}','yt')">문안</button>
+            <button ${B2} onclick="wmMark('${id}','yt')">${ok2?"취소":"표시"}</button></span></div>`:""}
+      </div>`;
     });
     const k=wmKk(G.g);
     if(k) h += `<div class="row" style="flex-wrap:wrap;gap:6px 10px;border-bottom:none">
         <div style="min-width:0;flex:1"><div class="nm">${esc(k.label)}</div><div class="sub">${esc(k.s||"")}</div></div>
         <div style="display:flex;gap:5px;flex:none">
-          <button class="btn btn-nav" style="padding:8px 10px;font-size:13px" onclick="wmKkShare('${esc(k.id)}')">카톡 공유</button>
-          <button class="btn btn-outline" style="padding:6px 9px;font-size:13px" onclick="wmKkView('${esc(k.id)}')">문안</button>
-        </div></div>`;
+          <button ${B1} onclick="wmKkShare('${esc(k.id)}')">카톡 공유</button>
+          <button ${B2} onclick="wmKkView('${esc(k.id)}')">문안</button>
+        </div>
+        ${k.msg2?`<div ${L2}>
+          <span style="font-size:12.5px;font-weight:700;color:#0e7c86">② 유튜브</span>
+          <span style="margin-left:auto;display:flex;gap:5px">
+            <button ${B1} onclick="wmKkShare('${esc(k.id)}','yt')">카톡 공유</button>
+            <button ${B2} onclick="wmKkView('${esc(k.id)}','yt')">문안</button></span></div>`:""}
+      </div>`;
   });
   return h+`<div class="hint">표시 버튼은 다른 방법으로 보냈을 때 '보냄' 표시만 바꿉니다. 표시는 이 휴대폰에만 저장됩니다.</div></div>`;
 }
