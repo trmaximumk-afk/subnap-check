@@ -1110,6 +1110,8 @@ function closeModal(){ $("modalRoot").innerHTML=""; }
 const WA_UNTIL = "2027-03-31";
 const WA_SB = "https://szyexqqofdtlfgeuvsub.supabase.co", WA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6eWV4cXFvZmR0bGZnZXV2c3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjQyMzMsImV4cCI6MjA5NzcwMDIzM30.iTz8HPo-qEGSKRQHQObkKeu5OuveJtldzKtciqxpZTI";
 const WA_PAGE = "https://trmaximumk-afk.github.io/prime-k-math/winter.html#apply";
+/* 11/17 원장 "신청서 페이지 말고 신청서 관리자 페이지가 연동되게" → 신청 탭 버튼은 관리자 페이지(winter-check.html, 같은 주소 아래라 확인 키 winter_admin_key를 함께 씀) */
+const WA_ADMIN = "https://trmaximumk-afk.github.io/prime-k-math/winter-check.html";
 const WA_ST = ["새 신청","연락함","등록","취소"];
 let WA = { rows:null, err:null, at:null };
 let waPrevNew = null;
@@ -1324,7 +1326,7 @@ function wmSection(){
 }
 function renderApply(){
   let h = `<h2 class="sec"><span class="dot"></span>겨울특강 참가신청${WA.rows?` <span style="font-weight:500;font-size:12px;color:var(--muted)">· ${WA.rows.length}건${WA.at?" · "+waWhen(WA.at)+" 확인":""}</span>`:""}</h2>
-    <div class="btn-row" style="margin-bottom:12px"><button class="btn btn-nav" onclick="waRefresh(this)">새로고침</button><button class="btn btn-outline" onclick="window.open(WA_PAGE,'_blank')">신청서 페이지</button></div>` + wmSection();
+    <div class="btn-row" style="margin-bottom:12px"><button class="btn btn-nav" onclick="waRefresh(this)">새로고침</button><button class="btn btn-primary" onclick="window.open(WA_ADMIN,'_blank')">신청서 관리자 페이지</button></div>` + wmSection();
   if(WA.err==="nokey") return h + waKeyBox("신청 목록을 보려면 확인 키가 필요합니다");
   if(WA.err==="auth") return h + waKeyBox("확인 키가 맞지 않습니다. 다시 넣어 주세요");
   if(WA.err==="locked") return h + `<div class="empty">확인 키를 여러 번 틀려 10분 동안 잠겼습니다.<br><span style="font-size:12px">10분 뒤 새로고침을 눌러 주세요.</span></div>` + waKeyBox("잠금이 풀린 뒤 키를 다시 넣어 주세요");
