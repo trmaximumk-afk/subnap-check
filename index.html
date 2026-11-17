@@ -99,6 +99,8 @@
   .wa-kv b{ font-weight:700; }
   .wa-kv a{ color:#b8862a; font-weight:800; text-decoration:none; }
   .wa-q{ margin-top:8px; background:#f8f8fc; border-radius:10px; padding:9px 11px; font-size:13.5px; line-height:1.6; white-space:pre-wrap; }
+  .wa-flash{ animation:waFlash 1.6s ease 2; }
+  @keyframes waFlash{ 0%,100%{ box-shadow:0 1px 4px rgba(0,0,0,.04); } 50%{ box-shadow:0 0 0 3px #0e7c86; } }
   .wa-memo{ margin-top:6px; font-size:12.5px; color:#8a4d0f; background:#fff8e6; border-radius:8px; padding:6px 9px; }
   .wa-seg{ display:flex; gap:4px; margin-top:8px; background:#f2f2f7; border-radius:10px; padding:3px; }
   .wa-seg button{ flex:1; border:0; background:none; border-radius:8px; padding:7px 0; font-family:inherit; font-size:12.5px; font-weight:700; color:#777; cursor:pointer; }
@@ -1159,10 +1161,11 @@ function waSummary(rows){
 }
 function waItem(r){
   const stCls={ "새 신청":"r", "연락함":"o", "등록":"g", "취소":"n" }[r.status]||"n";
-  return `<div class="card wa-it ${r.status==="새 신청"?"wa-new":""}">
+  const fm=wmD()?waFam(r):null;
+  return `<div class="card wa-it ${r.status==="새 신청"?"wa-new":""}" id="wa-${r.id}">
     <div style="display:flex;align-items:flex-start;gap:8px">
       <div><div style="font-size:16px;font-weight:800">${esc(r.student_name)} <small style="font-weight:600;color:var(--muted)">${esc(r.grade)} · ${esc(r.school)}</small></div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">${waWhen(r.submitted_at)} · ${waAgo(r.submitted_at)}${r.submit_count>1?` · 다시 보냄(${r.submit_count}번째)`:""}${r.source&&r.source!=="web"?` · 경로 ${esc(r.source)}`:""}</div></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${waWhen(r.submitted_at)} · ${waAgo(r.submitted_at)}${r.submit_count>1?` · 다시 보냄(${r.submit_count}번째)`:""}${r.source&&r.source!=="web"?` · 경로 ${esc(waSrcName(r.source))}`:""}</div></div>
       <span class="pill ${stCls}" style="margin-left:auto;flex:none">${esc(r.status)}</span>
     </div>
     <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px">${waProg(r)}<span class="pill n">${esc(r.relation)}</span></div>
@@ -1171,6 +1174,7 @@ function waItem(r){
     ${r.contact_time?`<div class="wa-kv"><span>상담 시간</span><b>${esc(r.contact_time)}</b></div>`:""}
     ${r.question?`<div class="wa-q">${esc(r.question)}</div>`:""}
     ${r.admin_memo?`<div class="wa-memo">메모 · ${esc(r.admin_memo)}</div>`:""}
+    ${fm?`<div class="wa-kv"><span>안내 문자</span><b style="cursor:pointer" onclick="wmGoFam('${esc(fm.id)}')">① 특강 ${wmSent(fm.id)?"보냄":"안 보냄"}${fm.msg2?` · ② 유튜브 ${wmSent(fm.id,"yt")?"보냄":"안 보냄"}`:""} <span style="color:#0e7c86">› 목록</span></b></div>`:""}
     <div class="btn-row" style="margin-top:10px">
       <a class="btn btn-nav" style="text-decoration:none;padding:10px 0" href="tel:${esc(r.parent_phone)}">전화</a>
       <button class="btn btn-outline" style="padding:8px 0" onclick="waSms(${r.id})">문자</button>
@@ -1231,11 +1235,43 @@ function wmKkView(id,part){
     {t:"복사", cls:"btn-outline", fn:()=>{ copy(txt); toast("복사 완료"); }},
     {t:"카톡 공유", cls:"btn-primary", fn:()=>wmKkShare(id,part)} ]);
 }
+/* 11/17 원장 "대시보드를 특강신청서 확인하는 관리자 페이지와 연동" — 안내 문자 목록 ↔ 신청서 목록(WA.rows) 서로 연결.
+   짝짓기 = 학생 이름이 같거나(형제는 note의 '같은 번호') 학부모 번호가 같으면 같은 가정. 신청서는 1분마다 다시 불러옴(waPoll). */
+const WA_SRC = { parent_m3:"중3 학부모 문자", kakao_m3:"중3 학생 카톡", parent_h12:"고1·2 학부모 문자", kakao_h12:"고1·2 학생 카톡",
+  blog:"블로그", naver_place:"네이버 플레이스", daangn:"당근", naver_clip:"네이버 클립", shorts_qr:"쇼츠 QR", qr_card:"QR 카드" };
+function waSrcName(s){ return WA_SRC[s]||s; }
+function wmDigits(x){ return (""+(x||"")).replace(/\D/g,""); }
+function wmNames(f){ const a=[f.id]; const m=(f.note||"").match(/같은 번호:\s*(.+)$/); if(m) m[1].split("·").forEach(x=>{ x=x.trim(); if(x) a.push(x); }); return a.map(x=>x.replace(/\s/g,"")); }
+function wmApps(f){
+  if(!WA.rows) return null;
+  const names=wmNames(f), ph=wmDigits(smPhone(f));
+  return WA.rows.filter(r=>names.includes((r.student_name||"").replace(/\s/g,"")) || (ph && wmDigits(r.parent_phone)===ph))
+                .sort((a,b)=>new Date(b.submitted_at)-new Date(a.submitted_at));
+}
+function waFam(r){   // 신청서 → 안내 문자를 받은 가정
+  const nm=(r.student_name||"").replace(/\s/g,""), ph=wmDigits(r.parent_phone);
+  return wmFams().find(f=>wmNames(f).includes(nm) || (ph && wmDigits(smPhone(f))===ph))||null;
+}
+function wmGoApp(id){
+  const el=document.getElementById("wa-"+id); if(!el){ toast("신청서를 찾지 못했습니다. 새로고침을 눌러 주세요"); return; }
+  el.scrollIntoView({behavior:"smooth", block:"center"}); el.classList.remove("wa-flash"); void el.offsetWidth; el.classList.add("wa-flash");
+}
+function wmGoFam(fid){
+  wmOpen=true; waKeep();
+  setTimeout(()=>{ const el=document.getElementById("wm-"+fid); if(el){ el.scrollIntoView({behavior:"smooth", block:"center"}); el.classList.remove("wa-flash"); void el.offsetWidth; el.classList.add("wa-flash"); } },50);
+}
+function wmAppTag(f){
+  const apps=wmApps(f); if(apps==null) return "";
+  if(!apps.length) return `<span class="pill n" style="font-size:10.5px;padding:2px 7px;vertical-align:2px;opacity:.75">신청 전</span>`;
+  const r=apps[0], cls={ "새 신청":"r", "연락함":"o", "등록":"g", "취소":"n" }[r.status]||"n";
+  return `<span class="pill ${cls}" style="font-size:10.5px;padding:2px 7px;vertical-align:2px;cursor:pointer" onclick="wmGoApp(${r.id})">신청 · ${esc(r.status)}</span>`;
+}
 function wmPill(ok){ return `<span class="pill ${ok?"g":"n"}" style="font-size:10.5px;padding:2px 7px;vertical-align:2px">${ok?"보냄":"안 보냄"}</span>`; }
 function wmSection(){
   const d=wmD(); if(!d||!wmFams().length) return "";
   const all=wmFams(), sent=all.filter(f=>wmSent(f.id)).length, open=wmIsOpen();
   const yts=all.filter(f=>f.msg2), ysent=yts.filter(f=>wmSent(f.id,"yt")).length;
+  const napp=WA.rows ? all.filter(f=>(wmApps(f)||[]).some(r=>r.status!=="취소")).length : null;
   const B1=`class="btn btn-nav" style="padding:8px 10px;font-size:13px"`, B2=`class="btn btn-outline" style="padding:6px 9px;font-size:13px"`;
   const L2=`style="flex-basis:100%;display:flex;align-items:center;gap:5px;padding-top:6px;border-top:1px dashed var(--line,#e3e6ea)"`;
   let h = `<div class="card" style="border:2px solid #0e7c86">
@@ -1244,16 +1280,18 @@ function wmSection(){
       <span style="margin-left:auto;display:flex;gap:4px;align-items:center">
         <span class="pill ${sent===all.length?"g":"o"}">① ${sent}/${all.length}</span>
         ${yts.length?`<span class="pill ${ysent===yts.length?"g":"o"}">② 유튜브 ${ysent}/${yts.length}</span>`:""}
+        ${napp!=null?`<span class="pill ${napp?"g":"n"}">신청 ${napp}/${all.length}</span>`:""}
         <span style="color:var(--muted);font-size:13px">${open?"▲":"▼"}</span></span></div>`;
   if(!open) return h+`</div>`;
-  h += `<div class="hint" style="margin-top:6px"><b>보내기</b>를 누르면 학부모님 번호와 본문이 채워진 문자앱이 열립니다. 전송만 누르세요(누르는 순간 '보냄' 표시). ${yts.length?"① 특강 안내를 보낸 뒤 ② 유튜브 안내도 한 통 더 보내 주세요. ":""}밤 9시~아침 8시에는 보내지 마세요.</div>`;
+  h += `<div class="hint" style="margin-top:6px"><b>보내기</b>를 누르면 학부모님 번호와 본문이 채워진 문자앱이 열립니다. 전송만 누르세요(누르는 순간 '보냄' 표시). ${yts.length?"① 특강 안내를 보낸 뒤 ② 유튜브 안내도 한 통 더 보내 주세요. ":""}밤 9시~아침 8시에는 보내지 마세요.</div>
+    <div class="hint" style="margin-top:4px">${WA.rows?"학부모님이 참가신청서를 내면 이름 옆에 <b>신청</b> 표시가 붙습니다(화면이 켜져 있으면 1분마다 확인). 누르면 아래 신청서로 옮겨 갑니다.":"이 기기에 확인 키를 넣으면 가정마다 참가신청서를 냈는지 함께 보입니다."}</div>`;
   (d.groups||[]).forEach(G=>{
     const fs=all.filter(f=>f.group===G.g); if(!fs.length) return;
     h += `<div class="grade-h">${esc(G.t)} ${fs.length}가정 <span style="font-weight:500;color:var(--muted)">· ${esc(G.s||"")}</span></div>`;
     fs.forEach(f=>{
       const ok=wmSent(f.id), ok2=wmSent(f.id,"yt"), ph=smPhone(f), id=esc(f.id);
-      h += `<div class="row" style="flex-wrap:wrap;gap:6px 10px">
-        <div style="min-width:0;flex:1"><div class="nm">${esc(f.label)} ${wmPill(ok)}</div>
+      h += `<div class="row" id="wm-${id}" style="flex-wrap:wrap;gap:6px 10px">
+        <div style="min-width:0;flex:1"><div class="nm">${esc(f.label)} ${wmPill(ok)} ${wmAppTag(f)}</div>
           <div class="sub">${esc(f.school||"")} · <span style="white-space:nowrap">${ph?fmtPhone(ph):"번호 없음"}</span>${f.note?" · "+esc(f.note):""}</div></div>
         <div style="display:flex;gap:5px;flex:none">
           <button ${B1} onclick="wmSms('${id}')">보내기</button>
@@ -1270,7 +1308,7 @@ function wmSection(){
     });
     const k=wmKk(G.g);
     if(k) h += `<div class="row" style="flex-wrap:wrap;gap:6px 10px;border-bottom:none">
-        <div style="min-width:0;flex:1"><div class="nm">${esc(k.label)}</div><div class="sub">${esc(k.s||"")}</div></div>
+        <div style="min-width:0;flex:1"><div class="nm">${esc(k.label)}</div><div class="sub">${esc(k.s||"")}${WA.rows?` · 이 카톡 링크로 들어온 신청 ${WA.rows.filter(r=>r.source==="kakao_"+k.id).length}건`:""}</div></div>
         <div style="display:flex;gap:5px;flex:none">
           <button ${B1} onclick="wmKkShare('${esc(k.id)}')">카톡 공유</button>
           <button ${B2} onclick="wmKkView('${esc(k.id)}')">문안</button>
