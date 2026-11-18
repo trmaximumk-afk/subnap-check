@@ -1,25 +1,12 @@
 {
-  "date": "2026-11-18",
-  "generated_at": "15:44",
+  "date": "2026-11-19",
+  "generated_at": "05:00",
   "summary": {
     "new": 0,
-    "withdrawn": 2,
+    "withdrawn": 0,
     "changed": 0
   },
-  "changes": [
-    {
-      "name": "강지민",
-      "kind": "withdrawn",
-      "label": "퇴원",
-      "detail": "고3 호수돈여자고등학교"
-    },
-    {
-      "name": "최은수",
-      "kind": "withdrawn",
-      "label": "퇴원",
-      "detail": "고3 보문고등학교"
-    }
-  ],
+  "changes": [],
   "excel_mismatch": [],
-  "excel_generated": "프라임K수학_시간표학생배치_최신_20261118.xlsx"
+  "excel_generated": null
 }
