@@ -1,12 +1,25 @@
 {
   "date": "2026-11-28",
-  "generated_at": "18:10",
+  "generated_at": "18:12",
   "summary": {
     "new": 0,
-    "withdrawn": 0,
+    "withdrawn": 2,
     "changed": 0
   },
-  "changes": [],
+  "changes": [
+    {
+      "name": "공주원",
+      "kind": "withdrawn",
+      "label": "퇴원",
+      "detail": "중3 보문중학교"
+    },
+    {
+      "name": "손채영",
+      "kind": "withdrawn",
+      "label": "퇴원",
+      "detail": "고1 호수돈여자고등학교"
+    }
+  ],
   "excel_mismatch": [],
-  "excel_generated": null
+  "excel_generated": "프라임K수학_시간표학생배치_최신_20261128.xlsx"
 }
